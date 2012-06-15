@@ -1,36 +1,27 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Roommate Expense Tracker</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.min.css"/>
-    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap-responsive.min.css"/>
-    <script type="text/javascript" src="/javascripts/bootstrap.min.js"></script>
-    <script type="text/javascript" src="/javascripts/flotr2.min.js"></script>
-    <script type="text/javascript" src="/javascripts/ret.js"></script>
-</head>
-<body>
-<div class="navbar">
-    <div class="navbar-inner">
-        <div class="container-fluid">
-            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </a>
-            <a class="brand" href="#">Roommate Expense Tracker</a>
-
-            <div class="nav-collapse">
-                <ul class="nav">
-                    <li class="active"><a href="#">Home</a></li>
-                    <li><a href="#expenses">Expenses</a></li>
-                </ul>
+    <head>
+        <title>Roommate Expense Tracker</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap-responsive.min.css"/>
+        <script type="text/javascript" src="/javascripts/jquery-1.7.2.min.js"></script>
+        <script type="text/javascript" src="/javascripts/bootstrap.min.js"></script>
+        <script type="text/javascript" src="/javascripts/flotr2.min.js"></script>
+        <script type="text/javascript" src="/javascripts/ret.js"></script>
+    </head>
+    <body>
+        <div class="navbar">
+            <div class="navbar-inner">
+                <div class="container">
+                    <span class="brand">Roommate Expense Tracker</span>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-<div class="container">
-    <%- body %>
-</div>
-</body>
+
+
+        <div class="container">
+            <%- body %>
+        </div>
+    </body>
 </html>

@@ -1,4 +1,14 @@
-window.onload = function () {
+$(document).ready(function() {
+    $('#expensesOverview').click(function (e) {console.log('switch to overview');
+        e.preventDefault();
+        $(this).tab('show');
+    });
+
+    $('#pastExpenses').click(function (e) {console.log('switch to expenses');
+        e.preventDefault();
+        $(this).tab('show');
+    });
+
     var container = document.getElementById("expenseGraphContainer");
 
     var data = [];
@@ -25,20 +35,12 @@ window.onload = function () {
         }
     };
 
-
-// Draw the graph:
-    try {
-        var graph = Flotr.draw(container, data, options);
-    } catch (err) {
-        console.log(err);
-    }
-};
+    var graph = Flotr.draw(container, data, options);
+});
 
 function formatXAxis (x) {
     var names = ['Aaron', 'Andy', 'Barry'];
     var index = parseFloat(x);
-
-    console.log(index);
 
     if (index % 1 === 0) {
         return names[index];
