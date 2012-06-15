@@ -6,9 +6,11 @@
     <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.min.css"/>
     <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap-responsive.min.css"/>
     <script type="text/javascript" src="/javascripts/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/javascripts/flotr2.min.js"></script>
+    <script type="text/javascript" src="/javascripts/ret.js"></script>
 </head>
 <body>
-<div class="navbar navbar-fixed-top">
+<div class="navbar">
     <div class="navbar-inner">
         <div class="container-fluid">
             <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -24,10 +26,11 @@
                     <li><a href="#expenses">Expenses</a></li>
                 </ul>
             </div>
-            <!--/.nav-collapse -->
         </div>
     </div>
 </div>
-<%- body %>
+<div class="container">
+    <%- body %>
+</div>
 </body>
 </html>
