@@ -22,9 +22,7 @@ window.onload = function () {
 
         yaxis: {
             min: 0
-        },
-
-        title: "Expenses Paid"
+        }
     };
 
 
