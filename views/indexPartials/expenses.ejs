@@ -164,44 +164,19 @@
     </table>
 </div>
 
-<div style="display:table;margin-right:auto;margin-left:auto;border-radius:5px;padding:5px;border-width:2px;border-color:black;border-style:solid;">
-    <div style="display:table;margin-right:auto;margin-left:auto">
-        <h1>Submit Expense</h1>
-    </div>
+<div style="display:table;margin-right:auto;margin-left:auto;">
 
-    <form class="form-horizontal">
-        <div class="fieldset">
-            <div class="control-group">
-                <label class="control-label" for="payer">Payer:</label>
-                <div class="controls">
-                    <select id="payer" name="payer">
-                        <option>Aaron</option>
-                        <option>Andy</option>
-                        <option>Barry</option>
-                    </select>
-                </div>
-            </div>
+    <form class="well form-inline">
+        <select id="payer" name="payer" style="width:80px;">
+            <option>Aaron</option>
+            <option>Andy</option>
+            <option>Barry</option>
+        </select>
 
-            <div class="control-group">
-                <label class="control-label" for="amount">Amount:</label>
-                <div class="controls">
-                    <input id="amount" type="number" name="amount" min=".01" />
-                </div>
-            </div>
+        <input id="amount" type="number" name="amount" min=".01" style="width:50px;" />
 
-            <div class="control-group">
-                <label class="control-label" for="comment">Description:</label>
-                <div class="controls">
-                    <input id="comment" type="text" name="comment" />
-                </div>
-            </div>
+        <input id="comment" type="text" name="comment" placeholder="Comment" />
 
-            <div class="control-group">
-                <div class="controls">
-                    <button type="submit" class="btn btn-primary">Expense</button>
-                </div>
-            </div>
-        </div>
-
+        <button type="submit" class="btn btn-primary">Expense</button>
     </form>
 </div>
