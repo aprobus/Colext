@@ -1,10 +1,10 @@
 $(document).ready(function() {
-    $('#expensesOverview').click(function (e) {
+    $('#current').click(function (e) {
         e.preventDefault();
         $(this).tab('show');
     });
 
-    $('#pastExpenses').click(function (e) {
+    $('#history').click(function (e) {
         e.preventDefault();
         $(this).tab('show');
     });
