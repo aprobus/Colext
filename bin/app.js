@@ -1,8 +1,3 @@
-
-/**
- * Module dependencies.
- */
-
 var express = require('express');
 var routes = require('./../routes');
 var path = require('path');
@@ -32,8 +27,15 @@ app.configure('production', function(){
 });
 
 // Routes
+var routes = {
+    main: require('./../routes/index'),
+    current: require('./../routes/current'),
+    history: require('./../routes/history')
+};
 
-app.get('/', routes.index);
+app.get('/', routes.main.index);
+app.get('/current', routes.current.index);
+app.get('/history', routes.history.index);
 
 app.listen(3000, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
