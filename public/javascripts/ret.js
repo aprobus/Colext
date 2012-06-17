@@ -9,14 +9,23 @@ $(document).ready(function() {
         $(this).tab('show');
     });
 
+    jQuery.getJSON('/current', function(post) {
+        console.log(post);
+        drawGraph(post);
+    });
+});
+
+function drawGraph (people) {
     var container = document.getElementById("expenseGraphContainer");
 
-    var data = [];
-    data[0] = [[0, 45]];
+    var expensesPerPerson = people.map(function (person, index) {
+        var totalExpenses = 0.0;
+        for (var i = 0; i < person.expenses.length; i++) {
+            totalExpenses += person.expenses[i].amount;
+        }
 
-    data[1] = [[1, 32]];
-
-    data[2] = [[2, 63]];
+        return [[index, totalExpenses]];
+    });
 
     var options = {
         bars: {
@@ -26,7 +35,6 @@ $(document).ready(function() {
         },
 
         xaxis: {
-            //showLabels: false,
             tickFormatter: formatXAxis
         },
 
@@ -35,16 +43,17 @@ $(document).ready(function() {
         }
     };
 
-    var graph = Flotr.draw(container, data, options);
-});
+    var graph = Flotr.draw(container, expensesPerPerson, options);
 
-function formatXAxis (x) {
-    var names = ['Aaron', 'Andy', 'Barry'];
-    var index = parseFloat(x);
+    function formatXAxis (x) {
+        var index = parseFloat(x);
 
-    if (index % 1 === 0) {
-        return names[index];
-    } else {
-        return '';
+        if (index % 1 === 0) {
+            return people[index].name;
+        } else {
+            return '';
+        }
     }
 }
+
+
