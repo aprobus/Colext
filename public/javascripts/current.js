@@ -1,19 +1,9 @@
 $(document).ready(function() {
-    $('#expensesOverview').click(function (e) {console.log('switch to overview');
-        e.preventDefault();
-        $(this).tab('show');
-    });
-
-    $('#pastExpenses').click(function (e) {console.log('switch to expenses');
-        e.preventDefault();
-        $(this).tab('show');
-    });
-
     jQuery.getJSON('/current', function(post) {
-        console.log(post);
         drawGraph(post);
     });
 });
+
 
 function drawGraph (people) {
     var container = document.getElementById("expenseGraphContainer");
@@ -55,5 +45,3 @@ function drawGraph (people) {
         }
     }
 }
-
-
