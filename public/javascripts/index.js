@@ -1,3 +1,5 @@
+window.App = Ember.Application.create();
+
 $(document).ready(function() {
     $('#current').click(function (e) {
         e.preventDefault();
