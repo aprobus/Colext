@@ -62,6 +62,12 @@ App.personController = Ember.Object.extend({
     }.property('owe')
 });
 
+App.summaryTableView = Ember.View.extend({
+    tagName: 'table',
+    classNames: ['table', 'table-bordered'],
+    peopleBinding: 'App.peopleController.content'
+});
+
 $(document).ready(function() {
     jQuery.getJSON('/current', function(post) {
         var emberPeople = post.map(function (person) {

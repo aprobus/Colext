@@ -16,11 +16,11 @@
 
     <div class="span4">
         <script type="text/x-handlebars">
-        <table class="table table-bordered">
+            {{#view App.summaryTableView}}
             <thead>
                 <tr>
                     <td></td>
-                    {{#each App.peopleController}}
+                    {{#each people}}
                         <td>{{name}}</td>
                     {{/each}}
                 </tr>
@@ -29,14 +29,14 @@
             <tbody>
                 <tr>
                     <td>Paid</td>
-                    {{#each App.peopleController}}
+                    {{#each people}}
                     <td>${{paid}}</td>
                     {{/each}}
                 </tr>
 
                 <tr>
                     <td>Payout</td>
-                    {{#each App.peopleController}}
+                    {{#each people}}
                         {{#if inDebt}}
                             <td><span class="label label-important">${{absOwe}}</span></td>
                          {{else}}
@@ -45,7 +45,7 @@
                     {{/each}}
                 </tr>
             </tbody>
-        </table>
+            {{/view}}
         </script>
 
         <div style="display:table;margin-right:auto;margin-left:auto;text-align:center;">
