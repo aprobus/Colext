@@ -6,7 +6,7 @@ App.peopleController = Ember.ArrayController.create({
         });
 
         return userNames;
-    }.property('content.@each'),
+    }.property('content.@each.expenses.@each'),
 
     totalPaid: function () {
         var total = 0.0;
@@ -17,16 +17,16 @@ App.peopleController = Ember.ArrayController.create({
         }
 
         return total;
-    }.property('content.@each'),
+    }.property('content.@each.expenses.@each'),
 
     numPeople: function () {
         return this.get('content').length;
     }.property('content.@each'),
 
-    peopleChanged: drawGraph.observes('content.@each')
+    peopleChanged: drawGraph.observes('content.@each.expenses')
 });
 
-App.peopleController.addObserver('content.@each.expenses', function () {
+App.peopleController.addObserver('@each.expenses.@each', function () {
     var content = this.get('content');
     var expensePerPerson = this.get('totalPaid') / content.length;
 
@@ -39,7 +39,7 @@ App.peopleController.addObserver('content.@each.expenses', function () {
 
 App.personController = Ember.Object.extend({
     name: null,
-    expenses: null,
+    expenses: [],
 
     paid: function() {
         var totalExpenses = 0.0;
@@ -48,13 +48,13 @@ App.personController = Ember.Object.extend({
             totalExpenses += expenses[i].amount;
         }
 
-        return totalExpenses;
-    }.property('expenses'),
+        return totalExpenses.toFixed(2);
+    }.property('expenses.@each'),
 
     owe: 0.0,
 
-    absOwe: function () {
-        return Math.abs(this.get('owe'));
+    absOweString: function () {
+        return Math.abs(this.get('owe').toFixed(2));
     }.property('owe'),
 
     inDebt: function () {
@@ -63,9 +63,74 @@ App.personController = Ember.Object.extend({
 });
 
 App.summaryTableView = Ember.View.extend({
-    tagName: 'table',
-    classNames: ['table', 'table-bordered'],
     peopleBinding: 'App.peopleController.content'
+});
+
+App.expenseFormView = Ember.View.extend({
+    attributeBindings: ['action'],
+    action: '#',
+
+    namesBinding: 'App.peopleController.names',
+    commentBinding: 'App.expenseForm.commentView.value',
+    selectedUserBinding: 'App.expenseForm.nameSelectorView.selection',
+    amountBinding: 'App.expenseForm.amountView.value'
+});
+
+App.expenseFormController = Ember.Object.create({
+    user: null,
+    amount: null,
+    comment: null
+});
+
+App.expenseForm = Ember.Object.create({
+    nameSelectorView: Ember.Select.extend({
+        attributeBindings: ['name'],
+        name: 'payer',
+        selectionBinding: 'App.expenseFormController.user',
+        contentBinding: 'App.peopleController.names',
+        prompt: "Select a User"
+    }),
+
+    commentView: Ember.TextField.extend({
+        attributeBindings: ['placeHolder'],
+        placeHolder: 'Comment',
+        valueBinding: 'App.expenseFormController.comment'
+    }),
+
+    amountView: Ember.TextField.extend({
+        attributeBindings: ['type', 'style'],
+        type: 'number',
+
+        valueBinding: 'App.expenseFormController.amount'
+    }),
+
+    submitView: Ember.Button.extend({
+        attributeBindings: ['type', 'value'],
+        value: 'Submit',
+        type: 'submit',
+
+        click: function (event) {
+            console.log('Amount: ' + App.expenseFormController.get('amount'));
+            console.log('User: ' + App.expenseFormController.get('user'));
+            console.log('Comment: ' + App.expenseFormController.get('comment'));
+
+            var expense = {
+                timeStamp: new Date(),
+                amount: parseFloat(App.expenseFormController.get('amount')),
+                comment: App.expenseFormController.get('comment')
+            };
+
+            var people = App.peopleController.get('content');
+            var personWhoPaid = people.findProperty('name', App.expenseFormController.get('user'));
+            if (personWhoPaid) {
+                console.log('Total paid pre: ' + App.peopleController.get('totalPaid'));
+                var expenses = personWhoPaid.get('expenses');
+                //expenses.push(expense);
+                personWhoPaid.set('expenses', [expense].concat(expenses));
+                console.log('Total paid post: ' + App.peopleController.get('totalPaid'));
+            }
+        }
+    })
 });
 
 $(document).ready(function() {
@@ -78,7 +143,6 @@ $(document).ready(function() {
         drawGraph(post);
     });
 });
-
 
 function drawGraph () {
     var people = App.peopleController.get('content');
