@@ -48,8 +48,12 @@ App.personController = Ember.Object.extend({
             totalExpenses += expenses[i].amount;
         }
 
-        return totalExpenses.toFixed(2);
+        return totalExpenses;
     }.property('expenses.@each'),
+
+    paidString: function () {
+      return this.get('paid').toFixed(2);
+    }.property('paid'),
 
     owe: 0.0,
 

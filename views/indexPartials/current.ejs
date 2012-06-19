@@ -30,7 +30,7 @@
                 <tr>
                     <td>Paid</td>
                     {{#each people}}
-                    <td>${{paid}}</td>
+                    <td>${{paidString}}</td>
                     {{/each}}
                 </tr>
 
@@ -155,10 +155,10 @@
 
         <script type="text/x-handlebars">
             {{#view App.expenseFormView class="form-inline" tagName="form"}}
-            {{view App.expenseForm.nameSelectorView id="payer"}}
-            {{view App.expenseForm.amountView tagName="input"}}
-            {{view App.expenseForm.commentView }}
-            {{view App.expenseForm.submitView tagName="input" class="btn btn-primary" }}
+                {{view App.expenseForm.nameSelectorView id="payer"}}
+                {{view App.expenseForm.amountView }}
+                {{view App.expenseForm.commentView }}
+                {{view App.expenseForm.submitView tagName="input" class="btn btn-primary" }}
             {{/view}}
         </script>
 
