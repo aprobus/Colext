@@ -83,7 +83,13 @@ App.expenseFormView = Ember.View.extend({
 App.expenseFormController = Ember.Object.create({
     user: null,
     amount: null,
-    comment: null
+    comment: null,
+
+    reset: function () {
+        this.set('user', null);
+        this.set('amount', null);
+        this.set('comment', null);
+    }
 });
 
 App.expenseForm = Ember.Object.create({
@@ -114,10 +120,6 @@ App.expenseForm = Ember.Object.create({
         type: 'submit',
 
         click: function (event) {
-            console.log('Amount: ' + App.expenseFormController.get('amount'));
-            console.log('User: ' + App.expenseFormController.get('user'));
-            console.log('Comment: ' + App.expenseFormController.get('comment'));
-
             var expense = {
                 timeStamp: new Date(),
                 amount: parseFloat(App.expenseFormController.get('amount')),
@@ -126,12 +128,11 @@ App.expenseForm = Ember.Object.create({
 
             var people = App.peopleController.get('content');
             var personWhoPaid = people.findProperty('name', App.expenseFormController.get('user'));
-            if (personWhoPaid) {
-                console.log('Total paid pre: ' + App.peopleController.get('totalPaid'));
+            if (personWhoPaid && !isNaN(expense.amount) && expense.comment) {
                 var expenses = personWhoPaid.get('expenses');
-                //expenses.push(expense);
                 personWhoPaid.set('expenses', [expense].concat(expenses));
-                console.log('Total paid post: ' + App.peopleController.get('totalPaid'));
+
+                App.expenseFormController.reset();
             }
         }
     })
