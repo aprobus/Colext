@@ -51,7 +51,8 @@
         <div style="display:table;margin-right:auto;margin-left:auto;text-align:center;">
             <h3>Expenses</h3>
 
-            <table class="table">
+            <script type="text/x-handlebars">
+            {{#view App.expenseTableView class="table" tagName="table"}}
                 <thead>
                 <tr>
                     <td>
@@ -73,79 +74,17 @@
                 </thead>
 
                 <tbody>
-                <tr>
-                    <td>
-                        6/13/12
-                    </td>
-
-                    <td>
-                        Aaron
-                    </td>
-
-                    <td>
-                        $34.93
-                    </td>
-
-                    <td>
-                        Electric bill
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>
-                        6/11/12
-                    </td>
-
-                    <td>
-                        Aaron
-                    </td>
-
-                    <td>
-                        $15.07
-                    </td>
-
-                    <td>
-                        Gas bill
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>
-                        6/10/12
-                    </td>
-
-                    <td>
-                        Barry
-                    </td>
-
-                    <td>
-                        $60.00
-                    </td>
-
-                    <td>
-                        Groceries
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>
-                        6/9/12
-                    </td>
-
-                    <td>
-                        Andy
-                    </td>
-
-                    <td>
-                        $10.00
-                    </td>
-
-                    <td>
-                        Groceries
-                    </td>
-                </tr>
+                    {{#each content}}
+                    <tr>
+                        <td>{{timeStampString}}</td>
+                        <td>{{user}}</td>
+                        <td>${{amount}}</td>
+                        <td>{{comment}}</td>
+                    </tr>
+                    {{/each}}
                 </tbody>
-            </table>
+            {{/view}}
+            </script>
         </div>
     </div>
 </div>

@@ -70,6 +70,50 @@ App.summaryTableView = Ember.View.extend({
     peopleBinding: 'App.peopleController.content'
 });
 
+App.expenseTableView = Ember.View.extend({
+   content: function () {
+       var people = App.peopleController.get('content');
+
+       var expenses = [];
+       for (var i = 0; i < people.length; i++) {
+           var personExpenses = getUpdatedExpensesForPerson(people[i]);
+           expenses = expenses.concat(personExpenses);
+       }
+
+       var sortedExpenses = expenses.sort(function (expense1, expense2) {
+           if (expense1.timeStamp > expense2.timeStamp) return -1;
+           if (expense1.timeStamp < expense2.timeStamp) return 1;
+           return 0;
+       });
+
+       return sortedExpenses;
+
+       function getUpdatedExpensesForPerson (person) {
+           var personalExpenses = person.get('expenses');
+           var updatedExpenses = personalExpenses.map(function (personalExpense) {
+              var updatedExpense = Ember.Object.create({
+                  timeStamp: new Date(personalExpense.timeStamp),
+                  timeStampString: function () {
+                      var timeStamp = this.get('timeStamp');
+                      var day = timeStamp.getDate();
+                      var month = timeStamp.getMonth() + 1;
+                      var year = timeStamp.getFullYear().toString().substring(2);
+
+                      return month + '/' + day + '/' + year;
+                  }.property('timeStamp'),
+                  user: person.name,
+                  amount: personalExpense.amount.toFixed(2),
+                  comment: personalExpense.comment
+              }) ;
+
+               return updatedExpense;
+           });
+
+           return updatedExpenses;
+       }
+   }.property('App.peopleController.content.@each.paid')
+});
+
 App.expenseFormView = Ember.View.extend({
     attributeBindings: ['action'],
     action: '#',
