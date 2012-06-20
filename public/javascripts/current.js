@@ -6,7 +6,7 @@ App.peopleController = Ember.ArrayController.create({
         });
 
         return userNames;
-    }.property('content.@each.expenses.@each'),
+    }.property('content.@each.name'),
 
     totalPaid: function () {
         var total = 0.0;
@@ -17,16 +17,16 @@ App.peopleController = Ember.ArrayController.create({
         }
 
         return total;
-    }.property('content.@each.expenses.@each'),
+    }.property('content.@each.paid'),
 
     numPeople: function () {
         return this.get('content').length;
     }.property('content.@each'),
 
-    peopleChanged: drawGraph.observes('content.@each.expenses')
+    peopleChanged: drawGraph.observes('content.@each.paid')
 });
 
-App.peopleController.addObserver('@each.expenses.@each', function () {
+App.peopleController.addObserver('@each.paid', function () {
     var content = this.get('content');
     var expensePerPerson = this.get('totalPaid') / content.length;
 
@@ -130,7 +130,8 @@ App.expenseForm = Ember.Object.create({
             var personWhoPaid = people.findProperty('name', App.expenseFormController.get('user'));
             if (personWhoPaid && !isNaN(expense.amount) && expense.comment) {
                 var expenses = personWhoPaid.get('expenses');
-                personWhoPaid.set('expenses', [expense].concat(expenses));
+                //personWhoPaid.set('expenses', [expense].concat(expenses));
+                personWhoPaid.get('expenses').pushObject(expense);
 
                 App.expenseFormController.reset();
             }
