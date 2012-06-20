@@ -95,7 +95,7 @@
         <script type="text/x-handlebars">
             {{#view App.expenseFormView class="form-inline" tagName="form"}}
                 {{view App.expenseForm.nameSelectorView id="formPayer"}}
-                <span class="add-on">$</span>{{view App.expenseForm.amountView id="formAmount" }}
+                ${{view App.expenseForm.amountView id="formAmount" }}
                 {{view App.expenseForm.commentView }}
                 {{view App.expenseForm.submitView tagName="input" class="btn btn-primary" }}
             {{/view}}

@@ -140,6 +140,7 @@ App.expenseForm = Ember.Object.create({
     nameSelectorView: Ember.Select.extend({
         attributeBindings: ['name'],
         name: 'payer',
+
         selectionBinding: 'App.expenseFormController.user',
         contentBinding: 'App.peopleController.names',
         prompt: "Select a User"
@@ -148,12 +149,16 @@ App.expenseForm = Ember.Object.create({
     commentView: Ember.TextField.extend({
         attributeBindings: ['placeHolder'],
         placeHolder: 'Comment',
+
         valueBinding: 'App.expenseFormController.comment'
     }),
 
     amountView: Ember.TextField.extend({
         attributeBindings: ['type', 'style'],
         type: 'number',
+
+        classNameBindings: ['isInvalid:error'],
+        isInvalid: false,
 
         valueBinding: 'App.expenseFormController.amount'
     }),
@@ -173,11 +178,11 @@ App.expenseForm = Ember.Object.create({
             var people = App.peopleController.get('content');
             var personWhoPaid = people.findProperty('name', App.expenseFormController.get('user'));
             if (personWhoPaid && !isNaN(expense.amount) && expense.comment) {
-                var expenses = personWhoPaid.get('expenses');
-                //personWhoPaid.set('expenses', [expense].concat(expenses));
                 personWhoPaid.get('expenses').pushObject(expense);
 
                 App.expenseFormController.reset();
+            } else {
+                App.expenseForm.amountView.set('isInvalid', true);
             }
         }
     })
