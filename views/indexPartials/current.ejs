@@ -94,10 +94,10 @@
 
         <script type="text/x-handlebars">
             {{#view App.expenseFormView class="form-inline" tagName="form"}}
-                {{view App.expenseForm.nameSelectorView id="formPayer"}}
-                ${{view App.expenseForm.amountView id="formAmount" }}
-                {{view App.expenseForm.commentView }}
-                {{view App.expenseForm.submitView tagName="input" class="btn btn-primary" }}
+                {{view App.expenseFormControls.nameSelectorView id="formPayer"}}
+                ${{view App.expenseFormControls.amountView id="formAmount" }}
+                {{view App.expenseFormControls.commentView }}
+                {{view App.expenseFormControls.submitView tagName="input" class="btn btn-primary" }}
             {{/view}}
         </script>
 
