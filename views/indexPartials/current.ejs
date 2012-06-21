@@ -103,3 +103,16 @@
 
     </div>
 </div>
+
+<div class="row">
+    <script type="text/x-handlebars">
+    {{#view App.formAlertView class="span3 offset3 alert alert-error"}}
+        Unable to submit expense:
+        <ul>
+            {{#each errors}}
+                <li>{{ this }}</li>
+            {{/each}}
+        </ul>
+    {{/view}}
+    </script>
+</div>

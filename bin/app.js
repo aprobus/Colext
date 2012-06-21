@@ -1,5 +1,5 @@
 var express = require('express');
-var routes = require('./../routes');
+var nano = require('nano');
 var path = require('path');
 
 var app = module.exports = express.createServer();
@@ -26,15 +26,19 @@ app.configure('production', function(){
   app.use(express.errorHandler());
 });
 
+var couchDB = nano('http://192.168.1.101:5984');
+var retUsers = couchDB.db.use('ret_users');
+
 // Routes
 var routes = {
     main: require('./../routes/index'),
-    current: require('./../routes/current'),
+    current: require('./../routes/current').create(retUsers),
     history: require('./../routes/history')
 };
 
 app.get('/', routes.main.index);
 app.get('/current', routes.current.index);
+app.get('/current/add/:userName', routes.current.add);
 app.get('/history', routes.history.index);
 
 app.listen(3000, function(){

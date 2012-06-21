@@ -8,6 +8,14 @@ App.peopleController = Ember.ArrayController.create({
         return userNames;
     }.property('content.@each.name'),
 
+    userNames: function () {
+        var userNames = this.get('content').map(function (person) {
+            return person.userName;
+        });
+
+        return userNames;
+    }.property('content.@each.userName'),
+
     totalPaid: function () {
         var total = 0.0;
 
@@ -23,7 +31,14 @@ App.peopleController = Ember.ArrayController.create({
         return this.get('content').length;
     }.property('content.@each'),
 
-    peopleChanged: drawGraph.observes('content.@each.paid')
+    peopleChanged: drawGraph.observes('content.@each.paid'),
+
+    addExpense: function (userName, expense) {
+        var user = this.get('content').findProperty('userName', userName);
+        if (user) {
+            user.get('expenses').pushObject(expense);
+        }
+    }
 });
 
 App.peopleController.addObserver('@each.paid', function () {
@@ -39,6 +54,7 @@ App.peopleController.addObserver('@each.paid', function () {
 
 App.personController = Ember.Object.extend({
     name: null,
+    userName: null,
     expenses: [],
 
     paid: function() {
@@ -142,7 +158,13 @@ App.expenseForm = Ember.Object.create({
         name: 'payer',
 
         selectionBinding: 'App.expenseFormController.user',
-        contentBinding: 'App.peopleController.names',
+        /*TODO: Find out what is going wrong here
+        optionLabelPathBinding: 'content.name',
+        optionValuePathBinding: 'content.key',
+        contentBinding: 'App.peopleController.content',*/
+
+        contentBinding: 'App.peopleController.userNames',
+
         prompt: "Select a User"
     }),
 
@@ -169,23 +191,66 @@ App.expenseForm = Ember.Object.create({
         type: 'submit',
 
         click: function (event) {
+            var payer = App.expenseFormController.get('user');
             var expense = {
                 timeStamp: new Date(),
                 amount: parseFloat(App.expenseFormController.get('amount')),
                 comment: App.expenseFormController.get('comment')
             };
 
-            var people = App.peopleController.get('content');
-            var personWhoPaid = people.findProperty('name', App.expenseFormController.get('user'));
-            if (personWhoPaid && !isNaN(expense.amount) && expense.comment) {
-                personWhoPaid.get('expenses').pushObject(expense);
+            var validControl = {
+                payer: Boolean(payer),
+                amount: !isNaN(expense.amount) && expense.amount > 0,
+                comment: expense.comment
+            };
 
-                App.expenseFormController.reset();
+            if (validControl.payer && validControl.amount && validControl.comment) {
+                var ajaxData = {
+                    amount: expense.amount,
+                    comment: expense.comment
+                };
+
+                jQuery.getJSON('/current/add/' + payer, ajaxData, function(post) {
+                    if (post && post.status === 200 && !post.error) {
+                        App.formAlertController.set('errors', null);
+                        App.peopleController.addExpense(payer, expense);
+                        App.expenseFormController.reset();
+                    } else if (post && post.error) {
+                        App.formAlertController.set('errors', [post.error]);
+                    }
+                });
             } else {
-                App.expenseForm.amountView.set('isInvalid', true);
+                var errors = [];
+                if (!validControl.payer) {
+                    errors.push('Invalid user selected');
+                }
+
+                if (!validControl.amount) {
+                    errors.push('Invalid amount entered');
+                }
+
+                if (!validControl.comment) {
+                    errors.push('Please enter a comment');
+                }
+
+                App.formAlertController.set('errors', errors);
             }
         }
     })
+});
+
+App.formAlertController = Ember.Object.create({
+    errors: null
+});
+
+App.formAlertView = Ember.View.extend({
+   attributeBindings: ['hasNoErrors:hidden'],
+   hasNoErrors: function () {
+       var errors = this.get('errors');
+       return Boolean(!errors || errors.length === 0);
+   }.property('errors'),
+
+   errorsBinding: 'App.formAlertController.errors'
 });
 
 $(document).ready(function() {
@@ -194,8 +259,6 @@ $(document).ready(function() {
            return App.personController.create(person);
         });
         App.peopleController.set('content', emberPeople);
-
-        drawGraph(post);
     });
 });
 
