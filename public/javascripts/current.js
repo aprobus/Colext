@@ -109,7 +109,7 @@ App.expenseFormController = Ember.Object.create({
 
     getFormData: function () {
         var expense = {
-          amount: parseInt(this.get('amount')),
+          amount: parseFloat(this.get('amount')),
           comment: this.get('comment'),
           timeStamp: new Date()
         };
@@ -287,13 +287,15 @@ App.expenseFormControls = Ember.Object.create({
                 comment: formData.expense.comment
             };
 
-            jQuery.getJSON('/current/add/' + formData.payer, ajaxData, function(post) {
-                if (post && post.status === 200 && !post.error) {
+            jQuery.getJSON('/current/add/' + formData.payer, ajaxData, function(reply) {
+                if (reply && reply.errors && reply.errors.length > 0) {
+                    App.formAlertController.set('errors', reply.errors);
+                } else if (reply && reply.status === 200) {
                     App.formAlertController.set('errors', null);
                     App.peopleController.addExpense(formData);
                     App.expenseFormController.reset();
-                } else if (post && post.error) {
-                    App.formAlertController.set('errors', [post.error]);
+                } else {
+                    App.formAlertController.set('errors', ['Unknown response from server']);
                 }
             });
         }
