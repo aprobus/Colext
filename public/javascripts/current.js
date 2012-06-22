@@ -274,6 +274,8 @@ App.expenseFormControls = Ember.Object.create({
         type: 'submit',
 
         click: function (event) {
+            event.preventDefault();
+
             var formErrors = App.expenseFormController.getErrors();
             if (formErrors && formErrors.length > 0) {
                 App.formAlertController.set('errors', formErrors);
@@ -298,6 +300,18 @@ App.expenseFormControls = Ember.Object.create({
                     App.formAlertController.set('errors', ['Unknown response from server']);
                 }
             });
+        }
+    }),
+
+    cancelView: Ember.Button.extend({
+        attributeBindings: ['value'],
+        value: 'Cancel',
+
+        click: function (event) {
+            event.preventDefault();
+
+            App.formAlertController.set('errors', null);
+            App.expenseFormController.reset();
         }
     })
 });

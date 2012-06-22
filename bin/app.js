@@ -32,14 +32,12 @@ var retUsers = couchDB.db.use('ret_users');
 // Routes
 var routes = {
     main: require('./../routes/index'),
-    current: require('./../routes/current').create(retUsers),
-    history: require('./../routes/history')
+    current: require('./../routes/current').create(retUsers)
 };
 
 app.get('/', routes.main.index);
 app.get('/current', routes.current.index);
 app.get('/current/add/:userName', routes.current.add);
-app.get('/history', routes.history.index);
 
 app.listen(3000, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
