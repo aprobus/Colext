@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="span12" style="text-align:center;">
+    <div class="span4 offset4" style="text-align:center;">
         <h1>Current Expenses</h1>
     </div>
 </div>
@@ -21,7 +21,7 @@
             <tr>
                 <td></td>
                 {{#each people}}
-                <td>{{name}}</td>
+                    <td style="text-align:center;">{{name}}</td>
                 {{/each}}
             </tr>
             </thead>
@@ -30,52 +30,54 @@
             <tr>
                 <td>Paid</td>
                 {{#each people}}
-                <td>${{paidString}}</td>
+                    <td style="text-align:center;">${{paidString}}</td>
                 {{/each}}
             </tr>
 
             <tr>
                 <td>Payout</td>
                 {{#each people}}
-                {{#if inDebt}}
-                <td><span class="label label-important">${{absOweString}}</span></td>
-                {{else}}
-                <td><span class="label label-success">${{absOweString}}</span></td>
-                {{/if}}
+                    <td  style="text-align:center;">
+                        {{#if inDebt}}
+                            <span class="label label-important">${{absOweString}}</span>
+                        {{else}}
+                            <span class="label label-success">${{absOweString}}</span>
+                        {{/if}}
+                    </td>
                 {{/each}}
             </tr>
             </tbody>
             {{/view}}
         </script>
         <div id="expenseFormWrapper">
-        <script type="text/x-handlebars">
-            {{#view App.expenseFormView class="form-vertical" tagName="form"}}
-                <label class="control-label" for="formPayer">Payer:</label>
-                {{view App.expenseFormControls.nameSelectorView id="formPayer"}}
+            <script type="text/x-handlebars">
+                {{#view App.expenseFormView class="form-vertical" tagName="form"}}
+                    <label class="control-label" for="formPayer">Payer:</label>
+                    {{view App.expenseFormControls.nameSelectorView id="formPayer"}}
 
-                <label class="control-label" for="formAmount">Amount:</label>
-                ${{view App.expenseFormControls.amountView id="formAmount" }}
+                    <label class="control-label" for="formAmount">Amount:</label>
+                    ${{view App.expenseFormControls.amountView id="formAmount" }}
 
-                <label class="control-label" for="formComment">Comment:</label>
-                {{view App.expenseFormControls.commentView id="formComment" }}
+                    <label class="control-label" for="formComment">Comment:</label>
+                    {{view App.expenseFormControls.commentView id="formComment" }}
 
-                <div style="text-align:center;">
-                    {{view App.expenseFormControls.submitView tagName="input" class="btn btn-primary" }}
-                    {{view App.expenseFormControls.cancelView tagName="input" class="btn" }}
-                </div>
-            {{/view}}
-        </script>
+                    <div style="text-align:center;">
+                        {{view App.expenseFormControls.submitView tagName="input" class="btn btn-primary" }}
+                        {{view App.expenseFormControls.cancelView tagName="input" class="btn" }}
+                    </div>
+                {{/view}}
+            </script>
 
-        <script type="text/x-handlebars">
-            {{#view App.formAlertView class="alert alert-error"}}
-            Unable to submit expense:
-            <ul>
-                {{#each errors}}
-                <li>{{ this }}</li>
-                {{/each}}
-            </ul>
-            {{/view}}
-        </script>
+            <script type="text/x-handlebars">
+                {{#view App.formAlertView class="alert alert-error"}}
+                Unable to submit expense:
+                <ul>
+                    {{#each errors}}
+                    <li>{{ this }}</li>
+                    {{/each}}
+                </ul>
+                {{/view}}
+            </script>
         </div>
     </div>
 
@@ -103,14 +105,14 @@
             </thead>
 
             <tbody>
-            {{#each content}}
-            <tr>
-                <td>{{timeStampString}}</td>
-                <td>{{user}}</td>
-                <td>${{amount}}</td>
-                <td>{{comment}}</td>
-            </tr>
-            {{/each}}
+                {{#each content}}
+                <tr>
+                    <td>{{timeStampString}}</td>
+                    <td>{{user}}</td>
+                    <td>${{amount}}</td>
+                    <td>{{comment}}</td>
+                </tr>
+                {{/each}}
             </tbody>
             {{/view}}
         </script>

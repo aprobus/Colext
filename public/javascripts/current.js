@@ -212,10 +212,6 @@ App.pageController = Ember.Object.create({
         var expenses = App.peopleController.get('expenses').length;
         var totalPages = Math.ceil(expenses / 10.0);
 
-        console.log('expenses: ' + expenses);
-        console.log('total: ' + totalPages);
-        console.log('current: ' + currentPage);
-
         return (currentPage + 1) < totalPages;
     }.property('App.peopleController.content.@each.expenses.@each', 'currentPage'),
 
@@ -279,12 +275,7 @@ App.expenseTableView = Ember.View.extend({
  */
 App.expenseFormView = Ember.View.extend({
     attributeBindings: ['action'],
-    action: '#'/*,
-
-    namesBinding: 'App.peopleController.names',
-    commentBinding: 'App.expenseFormControls.commentView.value',
-    selectedUserBinding: 'App.expenseFormControls.nameSelectorView.selection',
-    amountBinding: 'App.expenseFormControls.amountView.value'*/
+    action: '#'
 });
 
 /*
