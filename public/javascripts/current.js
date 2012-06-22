@@ -72,6 +72,59 @@ App.peopleController = Ember.ArrayController.create({
         return this.get('content').length;
     }.property('content.@each'),
 
+    expenses: function () {
+        var people = App.peopleController.get('content');
+
+        var expenses = [];
+        for (var i = 0; i < people.length; i++) {
+            var personExpenses = getUpdatedExpensesForPerson(people[i]);
+            expenses = expenses.concat(personExpenses);
+        }
+
+        var sortedExpenses = expenses.sort(function (expense1, expense2) {
+            if (expense1.timeStamp > expense2.timeStamp) {
+                return -1;
+            }
+            if (expense1.timeStamp < expense2.timeStamp) {
+                return 1;
+            }
+
+            return 0;
+        });
+
+        return sortedExpenses;
+
+        function getUpdatedExpensesForPerson (person) {
+            var personalExpenses = person.get('expenses');
+            var updatedExpenses = personalExpenses.map(function (personalExpense) {
+                var abbrevComment = personalExpense.comment;
+                if (abbrevComment.length > 20) {
+                    abbrevComment = abbrevComment.substring(0, 20) + '...';
+                }
+
+                var updatedExpense = Ember.Object.create({
+                    timeStamp: new Date(personalExpense.timeStamp),
+                    timeStampString: function () {
+                        var timeStamp = this.get('timeStamp');
+                        var day = timeStamp.getDate();
+                        var month = timeStamp.getMonth() + 1;
+                        var year = timeStamp.getFullYear().toString().substring(2);
+
+                        return month + '/' + day + '/' + year;
+                    }.property('timeStamp'),
+                    user: person.name,
+                    amount: personalExpense.amount.toFixed(2),
+                    comment: abbrevComment,
+                    fullComment: personalExpense.comment
+                }) ;
+
+                return updatedExpense;
+            });
+
+            return updatedExpenses;
+        }
+    }.property('content.@each.paid'),
+
     onExpensesChanged: function () {
         var content = this.get('content');
         var expensePerPerson = this.get('totalPaid') / content.length;
@@ -151,6 +204,60 @@ App.formAlertController = Ember.Object.create({
     errors: null
 });
 
+App.pageController = Ember.Object.create({
+    currentPage: 0,
+
+    hasOlderPage: function () {
+        var currentPage = this.get('currentPage');
+        var expenses = App.peopleController.get('expenses').length;
+        var totalPages = Math.ceil(expenses / 10.0);
+
+        console.log('expenses: ' + expenses);
+        console.log('total: ' + totalPages);
+        console.log('current: ' + currentPage);
+
+        return (currentPage + 1) < totalPages;
+    }.property('App.peopleController.content.@each.expenses.@each', 'currentPage'),
+
+    hasNewerPage: function () {
+        var currentPage = this.get('currentPage');
+
+        return currentPage > 0;
+    }.property('App.peopleController.content.@each.expenses.@each', 'currentPage'),
+
+    viewOlder: function () {
+        if (this.get('hasOlderPage')) {
+            console.log('has older page');
+            var currentPage = this.get('currentPage');
+            this.set('currentPage', currentPage + 1);
+        } else {
+            console.log('does not have older page');
+        }
+    },
+
+    viewNewer: function () {
+        if (this.get('hasNewerPage')) {
+            console.log('has newer page');
+            var currentPage = this.get('currentPage');
+            this.set('currentPage', currentPage - 1);
+        } else {
+            console.log('does not have newer page');
+        }
+    },
+
+    expensesForPage: function () {
+        var currentPage = this.get('currentPage');
+        var expenses = App.peopleController.get('expenses');
+        var maxIndex = currentPage * 10 + 10;
+
+        if (maxIndex > expenses.length) {
+            maxIndex = expenses.length;
+        }
+
+        return expenses.slice(currentPage * 10, maxIndex);
+    }.property('currentPage', 'App.peopleController.expenses')
+});
+
 //------------------------------- Views -------------------------------
 
 /*
@@ -164,47 +271,7 @@ App.summaryTableView = Ember.View.extend({
     View of the most recent expenses
  */
 App.expenseTableView = Ember.View.extend({
-    content: function () {
-        var people = App.peopleController.get('content');
-
-        var expenses = [];
-        for (var i = 0; i < people.length; i++) {
-            var personExpenses = getUpdatedExpensesForPerson(people[i]);
-            expenses = expenses.concat(personExpenses);
-        }
-
-        var sortedExpenses = expenses.sort(function (expense1, expense2) {
-            if (expense1.timeStamp > expense2.timeStamp) return -1;
-            if (expense1.timeStamp < expense2.timeStamp) return 1;
-            return 0;
-        });
-
-        return sortedExpenses;
-
-        function getUpdatedExpensesForPerson (person) {
-            var personalExpenses = person.get('expenses');
-            var updatedExpenses = personalExpenses.map(function (personalExpense) {
-                var updatedExpense = Ember.Object.create({
-                    timeStamp: new Date(personalExpense.timeStamp),
-                    timeStampString: function () {
-                        var timeStamp = this.get('timeStamp');
-                        var day = timeStamp.getDate();
-                        var month = timeStamp.getMonth() + 1;
-                        var year = timeStamp.getFullYear().toString().substring(2);
-
-                        return month + '/' + day + '/' + year;
-                    }.property('timeStamp'),
-                    user: person.name,
-                    amount: personalExpense.amount.toFixed(2),
-                    comment: personalExpense.comment
-                }) ;
-
-                return updatedExpense;
-            });
-
-            return updatedExpenses;
-        }
-    }.property('App.peopleController.content.@each.paid')
+    contentBinding: 'App.pageController.expensesForPage'
 });
 
 /*
@@ -212,12 +279,12 @@ App.expenseTableView = Ember.View.extend({
  */
 App.expenseFormView = Ember.View.extend({
     attributeBindings: ['action'],
-    action: '#',
+    action: '#'/*,
 
     namesBinding: 'App.peopleController.names',
     commentBinding: 'App.expenseFormControls.commentView.value',
     selectedUserBinding: 'App.expenseFormControls.nameSelectorView.selection',
-    amountBinding: 'App.expenseFormControls.amountView.value'
+    amountBinding: 'App.expenseFormControls.amountView.value'*/
 });
 
 /*
@@ -303,6 +370,9 @@ App.expenseFormControls = Ember.Object.create({
         }
     }),
 
+    /*
+        View to clear the current expense form data
+     */
     cancelView: Ember.Button.extend({
         attributeBindings: ['value'],
         value: 'Cancel',
@@ -327,6 +397,35 @@ App.formAlertView = Ember.View.extend({
     }.property('errors'),
 
     errorsBinding: 'App.formAlertController.errors'
+});
+
+/*
+    View of the pager arrows, used to view older/newer expenses
+ */
+App.pagerViews = Ember.Object.create({
+    older: Ember.View.extend({
+        classNameBindings: ['hasNoOlder:disabled'],
+        hasNoOlder: function () {
+            return !App.pageController.get('hasOlderPage');
+        }.property('App.pageController.hasOlderPage'),
+
+        click: function (event) {
+            event.preventDefault();
+            App.pageController.viewOlder();
+        }
+    }),
+
+    newer: Ember.View.extend({
+        classNameBindings: ['hasNoNewer:disabled'],
+        hasNoNewer: function () {
+            return !App.pageController.get('hasNewerPage');
+        }.property('App.pageController.hasNewerPage'),
+
+        click: function (event) {
+            event.preventDefault();
+            App.pageController.viewNewer();
+        }
+    })
 });
 
 //------------------------------- Other -------------------------------

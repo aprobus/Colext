@@ -114,5 +114,17 @@
             </tbody>
             {{/view}}
         </script>
+
+        <ul class="pager">
+            <script type="text/x-handlebars">
+                {{#view App.pagerViews.newer tagName="li" class="previous"}}
+                    <a href="#">&larr; Newer</a>
+                {{/view}}
+
+                {{#view App.pagerViews.older tagName="li" class="next"}}
+                <a href="#">Older &rarr;</a>
+                {{/view}}
+            </script>
+        </ul>
     </div>
 </div>
