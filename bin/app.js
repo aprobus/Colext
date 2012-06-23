@@ -26,7 +26,7 @@ app.configure('production', function(){
   app.use(express.errorHandler());
 });
 
-var couchDB = nano('http://192.168.1.101:5984');
+var couchDB = nano('http://192.168.1.130:5984');
 var retUsers = couchDB.db.use('ret_users');
 
 // Routes

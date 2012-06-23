@@ -204,6 +204,9 @@ App.formAlertController = Ember.Object.create({
     errors: null
 });
 
+/*
+    Controls the paging data
+ */
 App.pageController = Ember.Object.create({
     currentPage: 0,
 
@@ -422,11 +425,17 @@ App.pagerViews = Ember.Object.create({
 //------------------------------- Other -------------------------------
 
 $(document).ready(function() {
-    jQuery.getJSON('/current', function(post) {
-        var emberPeople = post.map(function (person) {
-           return App.personModel.create(person);
-        });
-        App.peopleController.set('content', emberPeople);
+    jQuery.getJSON('/current', function(reply) {
+        if (reply && reply.error) {
+            App.formAlertController.set('errors', [reply.error && reply.error.description]);
+        } else if (reply && reply.users) {
+            var emberPeople = reply.users.map(function (person) {
+                return App.personModel.create(person);
+            });
+            App.peopleController.set('content', emberPeople);
+        } else {
+            App.formAlertController.set('errors', ['Unknown error while connecting to server']);
+        }
     });
 });
 

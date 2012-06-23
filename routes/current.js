@@ -68,7 +68,11 @@ Router.prototype._index = function(req, res){
                 return new RetUser(doc.key, doc.doc);
             });
 
-            res.json(retUsers, 200);
+            var returnJson = {
+                users: retUsers
+            };
+
+            res.json(returnJson, 200);
         });
     });
 };
