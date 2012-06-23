@@ -115,6 +115,7 @@ App.peopleController = Ember.ArrayController.create({
                     user: person.name,
                     amount: personalExpense.amount.toFixed(2),
                     comment: abbrevComment,
+                    title: personalExpense.comment,
                     fullComment: personalExpense.comment
                 }) ;
 

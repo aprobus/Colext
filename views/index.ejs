@@ -83,7 +83,7 @@
 
     <div class="span4" style="text-align:center;">
         <script type="text/x-handlebars">
-            {{#view App.expenseTableView class="table" tagName="table"}}
+            {{#view App.expenseTableView class="table table-striped" tagName="table"}}
             <thead>
                 <tr>
                     <td>Date</td>
@@ -95,12 +95,12 @@
 
             <tbody>
                 {{#each content}}
-                <tr>
-                    <td>{{timeStampString}}</td>
-                    <td>{{user}}</td>
-                    <td>${{amount}}</td>
-                    <td>{{comment}}</td>
-                </tr>
+                    <tr>
+                        <td>{{timeStampString}}</td>
+                        <td>{{user}}</td>
+                        <td>${{amount}}</td>
+                        <td>{{comment}}</td>
+                    </tr>
                 {{/each}}
             </tbody>
             {{/view}}
@@ -113,7 +113,7 @@
                 {{/view}}
 
                 {{#view App.pagerViews.older tagName="li" class="next"}}
-                <a href="#">Older &rarr;</a>
+                    <a href="#">Older &rarr;</a>
                 {{/view}}
             </script>
         </ul>
