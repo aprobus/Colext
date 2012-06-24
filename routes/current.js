@@ -96,7 +96,7 @@ function parseExpense (amount, comment) {
     var expense = {
         comment: comment,
         amount: numericAmount,
-        timeStamp: new Date()
+        timeStamp: new Date().getTime()
     };
 
     return expense;
