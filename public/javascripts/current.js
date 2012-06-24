@@ -147,7 +147,7 @@ App.peopleController = Ember.ArrayController.create({
     }.observes('content.@each.paid'),
 
     addExpense: function (formData) {
-        var user = this.get('content').findProperty('userName', formData.payer);
+        var user = this.get('content').findProperty('userName', formData.payer.get('userName'));
         if (user) {
             user.get('expenses').pushObject(formData.expense);
         }
@@ -176,7 +176,7 @@ App.expenseFormController = Ember.Object.create({
         };
 
         var formData = {
-            payer: this.get('user') ,
+            payer: this.get('user'),
             expense: expense
         };
 
@@ -301,12 +301,9 @@ App.expenseFormControls = Ember.Object.create({
         name: 'payer',
 
         selectionBinding: 'App.expenseFormController.user',
-        /*TODO: Find out what is going wrong here
-         optionLabelPathBinding: 'content.name',
-         optionValuePathBinding: 'content.key',
-         contentBinding: 'App.peopleController.content',*/
-
-        contentBinding: 'App.peopleController.userNames',
+        optionLabelPath: 'content.name',
+        optionValuePath: 'content.userName',
+        contentBinding: 'App.peopleController.content',
 
         prompt: "Select a User"
     }),
@@ -358,7 +355,7 @@ App.expenseFormControls = Ember.Object.create({
                 comment: formData.expense.comment
             };
 
-            jQuery.getJSON('/current/add/' + formData.payer, ajaxData, function(reply) {
+            jQuery.getJSON('/current/add/' + formData.payer.get('userName'), ajaxData, function(reply) {
                 if (reply && reply.errors && reply.errors.length > 0) {
                     App.formAlertController.set('errors', reply.errors);
                 } else if (reply && reply.status === 200) {
