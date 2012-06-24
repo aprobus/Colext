@@ -163,6 +163,8 @@ App.expenseFormController = Ember.Object.create({
     comment: null,
 
     reset: function () {
+        App.formAlertController.set('errors', null);
+
         this.set('user', null);
         this.set('amount', null);
         this.set('comment', null);
@@ -202,6 +204,34 @@ App.expenseFormController = Ember.Object.create({
         }
 
         return errors;
+    },
+
+    submit: function () {
+        var formErrors = this.getErrors();
+        if (formErrors && formErrors.length > 0) {
+            App.formAlertController.set('errors', formErrors);
+            return;
+        }
+
+        var formData = this.getFormData();
+        var payer = formData.payer.get('userName');
+
+        var ajaxData = {
+            amount: formData.expense.amount,
+            comment: formData.expense.comment
+        };
+
+        jQuery.getJSON('/current/add/' + payer, ajaxData, function(reply) {
+            if (reply && reply.errors && reply.errors.length > 0) {
+                App.formAlertController.set('errors', reply.errors);
+            } else if (reply && reply.status === 200) {
+                App.formAlertController.set('errors', null);
+                App.peopleController.addExpense(formData);
+                App.expenseFormController.reset();
+            } else {
+                App.formAlertController.set('errors', ['Unknown response from server']);
+            }
+        });
     }
 });
 
@@ -341,31 +371,7 @@ App.expenseFormControls = Ember.Object.create({
 
         click: function (event) {
             event.preventDefault();
-
-            var formErrors = App.expenseFormController.getErrors();
-            if (formErrors && formErrors.length > 0) {
-                App.formAlertController.set('errors', formErrors);
-                return;
-            }
-
-            var formData = App.expenseFormController.getFormData();
-
-            var ajaxData = {
-                amount: formData.expense.amount,
-                comment: formData.expense.comment
-            };
-
-            jQuery.getJSON('/current/add/' + formData.payer.get('userName'), ajaxData, function(reply) {
-                if (reply && reply.errors && reply.errors.length > 0) {
-                    App.formAlertController.set('errors', reply.errors);
-                } else if (reply && reply.status === 200) {
-                    App.formAlertController.set('errors', null);
-                    App.peopleController.addExpense(formData);
-                    App.expenseFormController.reset();
-                } else {
-                    App.formAlertController.set('errors', ['Unknown response from server']);
-                }
-            });
+            App.expenseFormController.submit();
         }
     }),
 
@@ -378,8 +384,6 @@ App.expenseFormControls = Ember.Object.create({
 
         click: function (event) {
             event.preventDefault();
-
-            App.formAlertController.set('errors', null);
             App.expenseFormController.reset();
         }
     })
