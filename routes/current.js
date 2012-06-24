@@ -79,7 +79,8 @@ Router.prototype._index = function(req, res){
 
 function RetUser (key, doc) {
     this.userName = key;
-    this.name = doc.name;
+    this.firstName = doc.firstName;
+    this.lastName = doc.lastName;
     this.expenses = doc.expenses;
 }
 

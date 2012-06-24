@@ -84,25 +84,25 @@
     <div class="span4" style="text-align:center;">
         <script type="text/x-handlebars">
             {{#view App.expenseTableView class="table table-striped" tagName="table"}}
-            <thead>
-                <tr>
-                    <td>Date</td>
-                    <td>Payer</td>
-                    <td>Amount</td>
-                    <td>Comment</td>
-                </tr>
-            </thead>
-
-            <tbody>
-                {{#each content}}
+                <thead>
                     <tr>
-                        <td>{{timeStampString}}</td>
-                        <td>{{user}}</td>
-                        <td>${{amount}}</td>
-                        <td>{{comment}}</td>
+                        <td>Date</td>
+                        <td>Payer</td>
+                        <td>Amount</td>
+                        <td>Comment</td>
                     </tr>
-                {{/each}}
-            </tbody>
+                </thead>
+
+                <tbody>
+                    {{#each content}}
+                        <tr>
+                            <td>{{timeStampString}}</td>
+                            <td>{{user}}</td>
+                            <td>${{amount}}</td>
+                            <td>{{comment}}</td>
+                        </tr>
+                    {{/each}}
+                </tbody>
             {{/view}}
         </script>
 

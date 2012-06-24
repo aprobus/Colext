@@ -1,3 +1,5 @@
+window.App = Ember.Application.create();
+
 //------------------------------- Data Models -------------------------------
 
 /**
@@ -5,9 +7,14 @@
  * @type {*}
  */
 App.personModel = Ember.Object.extend({
-    name: null,
+    firstName: null,
+    lastName: null,
     userName: null,
     expenses: [],
+
+    name: function () {
+        return this.get('firstName') + ' ' + this.get('lastName');
+    }.property('firstName', 'lastName'),
 
     paid: function() {
         var totalExpenses = 0.0;
@@ -36,8 +43,8 @@ App.personModel = Ember.Object.extend({
 
 //------------------------------- Controllers -------------------------------
 
-/**
- * Controls the list of users
+/*
+    Controls the list of users
  */
 App.peopleController = Ember.ArrayController.create({
     content: [],
@@ -112,7 +119,7 @@ App.peopleController = Ember.ArrayController.create({
 
                         return month + '/' + day + '/' + year;
                     }.property('timeStamp'),
-                    user: person.name,
+                    user: person.get('name'),
                     amount: personalExpense.amount.toFixed(2),
                     comment: abbrevComment,
                     title: personalExpense.comment,
