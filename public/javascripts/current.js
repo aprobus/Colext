@@ -2,9 +2,8 @@ window.App = Ember.Application.create();
 
 //------------------------------- Data Models -------------------------------
 
-/**
- * Data model of a Ret user
- * @type {*}
+/*
+    Data model of a person
  */
 App.personModel = Ember.Object.extend({
     firstName: null,
@@ -12,33 +11,100 @@ App.personModel = Ember.Object.extend({
     userName: null,
     expenses: [],
 
-    name: function () {
+    fullName: function () {
         return this.get('firstName') + ' ' + this.get('lastName');
     }.property('firstName', 'lastName'),
 
-    paid: function() {
-        var totalExpenses = 0.0;
+    expensesForPayout: function () {
         var expenses = this.get('expenses');
+        var start = App.payoutController.get('start');
+        var end = App.payoutController.get('end');
+
+        if (!start && !end) {
+            return expenses;
+        } else if (start && !end) {
+            return expenses.filter(expenseAfterDate);
+        } else if (!start && end) {
+            return expenses.filter(expenseBeforeDate);
+        } else {
+            return expenses.filter(expenseBetweenDate);
+        }
+
+        function expenseAfterDate (expense) {
+            return expense.timeStamp > start;
+        }
+
+        function expenseBeforeDate (expense) {
+            return expense.timeStamp < end;
+        }
+
+        function expenseBetweenDate (expense) {
+            return expenseAfterDate(expense) && expenseBeforeDate(expense);
+        }
+    }.property('expenses.@each.paid', 'App.payoutController.start', 'App.payoutController.end'),
+
+    paidForPayout: function() {
+        var totalExpenses = 0.0;
+        var expenses = this.get('expensesForPayout');
         for (var i = 0; i < expenses.length; i++) {
-            totalExpenses += expenses[i].amount;
+            totalExpenses += expenses[i].get('amount');
         }
 
         return totalExpenses;
-    }.property('expenses.@each'),
+    }.property('expensesForPayout.@each.amount'),
 
-    paidString: function () {
-        return this.get('paid').toFixed(2);
-    }.property('paid'),
+    paidForPayoutString: function () {
+        return this.get('paidForPayout').toFixed(2);
+    }.property('paidForPayout'),
 
-    owe: 0.0,
+    oweForPayout: function () {
+        var totalPaid = App.payoutController.get('totalPaid');
+        var numPeople = App.peopleController.get('numPeople');
+        var individualShare = totalPaid / numPeople;
 
-    absOweString: function () {
-        return Math.abs(this.get('owe').toFixed(2));
-    }.property('owe'),
+        var userPaid = this.get('paidForPayout');
 
-    inDebt: function () {
-        return this.get('owe') < 0;
-    }.property('owe')
+        return userPaid - individualShare;
+    }.property('App.payoutController.totalPaid', 'App.peopleController.numPeople', 'paidForPayout'),
+
+    absOweForPayoutString: function () {
+        var owedString = Math.abs(this.get('oweForPayout')).toFixed(2);
+        return owedString;
+    }.property('oweForPayout'),
+
+    inDebtForPayout: function () {
+        return this.get('oweForPayout') < 0;
+    }.property('oweForPayout'),
+
+    addExpense: function (expense) {
+        expense.set('payer', this);
+        this.get('expenses').pushObject(expense);
+    }
+});
+
+App.expenseModel = Ember.Object.extend({
+    payer: null,
+    timeStamp: null,
+    amount: 0.0,
+    comment: null,
+
+    timeStampString: function () {
+        var timeStamp = this.get('timeStamp');
+        var timeStampDate = new Date(timeStamp);
+        var day = timeStampDate.getDate();
+        var month = timeStampDate.getMonth() + 1;
+        var year = timeStampDate.getFullYear().toString().substring(2);
+
+        return month + '/' + day + '/' + year;
+    }.property('timeStamp'),
+
+    payerString: function () {
+        return this.get('payer').get('fullName');
+    }.property('payer'),
+
+    amountString: function () {
+        return this.get('amount').toFixed(2);
+    }.property('amount')
 });
 
 //------------------------------- Controllers -------------------------------
@@ -48,110 +114,74 @@ App.personModel = Ember.Object.extend({
  */
 App.peopleController = Ember.ArrayController.create({
     content: [],
-    names: function () {
-        var userNames = this.get('content').map(function (person) {
-            return person.name;
-        });
-
-        return userNames;
-    }.property('content.@each.name'),
-
-    userNames: function () {
-        var userNames = this.get('content').map(function (person) {
-            return person.userName;
-        });
-
-        return userNames;
-    }.property('content.@each.userName'),
-
-    totalPaid: function () {
-        var total = 0.0;
-
-        var people = this.get('content');
-        for (var i = 0; i < people.length; i++) {
-            total += people[i].get('paid');
-        }
-
-        return total;
-    }.property('content.@each.paid'),
 
     numPeople: function () {
         return this.get('content').length;
-    }.property('content.@each'),
+    }.property('content.@each')
+});
 
-    expenses: function () {
+/*
+    Everything that is related to this payout
+ */
+App.payoutController = Ember.Object.create({
+    payouts: [],
+    start: null,
+    end: null,
+
+    lastPayoutChanged: function () {
+        var content = this.get('payouts');
+        if (!content || content.length === 0) {
+            return;
+        }
+
+        this.set('start', content[content.length - 1]);
+    }.observes('payouts.@each'),
+
+    totalPaid: function () {
         var people = App.peopleController.get('content');
 
-        var expenses = [];
+        var total = 0.0;
         for (var i = 0; i < people.length; i++) {
-            var personExpenses = getUpdatedExpensesForPerson(people[i]);
-            expenses = expenses.concat(personExpenses);
+            total += people[i].get('paidForPayout');
+        }
+
+        return total;
+    }.property('App.peopleController.content.@each.paidForPayout'),
+
+    addPayout: function () {
+        var self = this;
+        jQuery.getJSON('/payout', function (reply) {
+            if (reply && reply.ok) {
+                self.get('payouts').pushObject(new Date().getTime());
+            }
+        });
+    },
+
+    expensesForPayout: function () {
+        var people = App.peopleController.get('content');
+        var expenses = [];
+
+        for (var i = 0; i < people.length; i++) {
+            expenses = expenses.concat(people[i].get('expensesForPayout'));
         }
 
         var sortedExpenses = expenses.sort(function (expense1, expense2) {
-            if (expense1.timeStamp > expense2.timeStamp) {
-                return -1;
-            }
-            if (expense1.timeStamp < expense2.timeStamp) {
-                return 1;
-            }
+            var timeStamp1 = new Date(expense1.get('timeStamp'));
+            var timeStamp2 = new Date(expense2.get('timeStamp'));
 
-            return 0;
+            if (timeStamp1 > timeStamp2) {
+                return -1;
+            } else if (timeStamp1 < timeStamp2) {
+                return 1;
+            } else {
+                return 0;
+            }
         });
 
         return sortedExpenses;
+    }.property('App.peopleController.content.@each.expensesForPayout.@each'),
 
-        function getUpdatedExpensesForPerson (person) {
-            var personalExpenses = person.get('expenses');
-            var updatedExpenses = personalExpenses.map(function (personalExpense) {
-                var abbrevComment = personalExpense.comment;
-                if (abbrevComment.length > 20) {
-                    abbrevComment = abbrevComment.substring(0, 20) + '...';
-                }
-
-                var updatedExpense = Ember.Object.create({
-                    timeStamp: new Date(personalExpense.timeStamp),
-                    timeStampString: function () {
-                        var timeStamp = this.get('timeStamp');
-                        var day = timeStamp.getDate();
-                        var month = timeStamp.getMonth() + 1;
-                        var year = timeStamp.getFullYear().toString().substring(2);
-
-                        return month + '/' + day + '/' + year;
-                    }.property('timeStamp'),
-                    user: person.get('name'),
-                    amount: personalExpense.amount.toFixed(2),
-                    comment: abbrevComment,
-                    title: personalExpense.comment,
-                    fullComment: personalExpense.comment
-                }) ;
-
-                return updatedExpense;
-            });
-
-            return updatedExpenses;
-        }
-    }.property('content.@each.paid'),
-
-    onExpensesChanged: function () {
-        var content = this.get('content');
-        var expensePerPerson = this.get('totalPaid') / content.length;
-
-        for (var i = 0; i < content.length; i++) {
-            var person = content[i];
-            var owe = person.get('paid') - expensePerPerson;
-            person.set('owe', owe);
-        }
-
-        drawGraph();
-    }.observes('content.@each.paid'),
-
-    addExpense: function (formData) {
-        var user = this.get('content').findProperty('userName', formData.payer.get('userName'));
-        if (user) {
-            user.get('expenses').pushObject(formData.expense);
-        }
-    }
+    onExpensesForPayoutChanged: drawGraph.observes('expensesForPayout.@each')
 });
 
 /*
@@ -216,17 +246,17 @@ App.expenseFormController = Ember.Object.create({
         var formData = this.getFormData();
         var payer = formData.payer.get('userName');
 
-        var ajaxData = {
+        var expensePartial = {
             amount: formData.expense.amount,
             comment: formData.expense.comment
         };
 
-        jQuery.getJSON('/current/add/' + payer, ajaxData, function(reply) {
+        jQuery.getJSON('/current/add/' + payer, expensePartial, function(reply) {
             if (reply && reply.errors && reply.errors.length > 0) {
                 App.formAlertController.set('errors', reply.errors);
             } else if (reply && reply.status === 200) {
                 App.formAlertController.set('errors', null);
-                App.peopleController.addExpense(formData);
+                addExpenseForUser(payer, expensePartial);
                 App.expenseFormController.reset();
             } else {
                 App.formAlertController.set('errors', ['Unknown response from server']);
@@ -250,41 +280,35 @@ App.pageController = Ember.Object.create({
 
     hasOlderPage: function () {
         var currentPage = this.get('currentPage');
-        var expenses = App.peopleController.get('expenses').length;
+        var expenses = App.payoutController.get('expensesForPayout').length;
         var totalPages = Math.ceil(expenses / 10.0);
 
         return (currentPage + 1) < totalPages;
-    }.property('App.peopleController.content.@each.expenses.@each', 'currentPage'),
+    }.property('App.payoutController.expensesForPayout.@each', 'currentPage'),
 
     hasNewerPage: function () {
         var currentPage = this.get('currentPage');
 
         return currentPage > 0;
-    }.property('App.peopleController.content.@each.expenses.@each', 'currentPage'),
+    }.property('App.payoutController.expensesForPayout.@each', 'currentPage'),
 
     viewOlder: function () {
         if (this.get('hasOlderPage')) {
-            console.log('has older page');
             var currentPage = this.get('currentPage');
             this.set('currentPage', currentPage + 1);
-        } else {
-            console.log('does not have older page');
         }
     },
 
     viewNewer: function () {
         if (this.get('hasNewerPage')) {
-            console.log('has newer page');
             var currentPage = this.get('currentPage');
             this.set('currentPage', currentPage - 1);
-        } else {
-            console.log('does not have newer page');
         }
     },
 
     expensesForPage: function () {
         var currentPage = this.get('currentPage');
-        var expenses = App.peopleController.get('expenses');
+        var expenses = App.payoutController.get('expensesForPayout');
         var maxIndex = currentPage * 10 + 10;
 
         if (maxIndex > expenses.length) {
@@ -292,7 +316,7 @@ App.pageController = Ember.Object.create({
         }
 
         return expenses.slice(currentPage * 10, maxIndex);
-    }.property('currentPage', 'App.peopleController.expenses')
+    }.property('currentPage', 'App.payoutController.expensesForPayout.@each')
 });
 
 //------------------------------- Views -------------------------------
@@ -331,7 +355,7 @@ App.expenseFormControls = Ember.Object.create({
         name: 'payer',
 
         selectionBinding: 'App.expenseFormController.user',
-        optionLabelPath: 'content.name',
+        optionLabelPath: 'content.fullName',
         optionValuePath: 'content.userName',
         contentBinding: 'App.peopleController.content',
 
@@ -431,6 +455,16 @@ App.pagerViews = Ember.Object.create({
     })
 });
 
+/*
+    View for adding new payouts
+ */
+App.payoutView = Ember.View.extend({
+    click: function (event) {
+        event.preventDefault();
+        App.payoutController.addPayout();
+    }
+});
+
 //------------------------------- Other -------------------------------
 
 $(document).ready(function() {
@@ -438,9 +472,7 @@ $(document).ready(function() {
         if (reply && reply.error) {
             App.formAlertController.set('errors', [reply.error && reply.error.description]);
         } else if (reply && reply.users) {
-            var emberPeople = reply.users.map(function (person) {
-                return App.personModel.create(person);
-            });
+            var emberPeople = setupUsersFromJson(reply.users);
             App.peopleController.set('content', emberPeople);
         } else {
             App.formAlertController.set('errors', ['Unknown error while connecting to server']);
@@ -453,7 +485,7 @@ function drawGraph () {
     var container = document.getElementById("expenseGraphContainer");
 
     var expensesPerPerson = people.map(function (person, index) {
-        var totalExpenses = person.get('paid');
+        var totalExpenses = person.get('paidForPayout');
 
         return [[index, totalExpenses]];
     });
@@ -480,9 +512,38 @@ function drawGraph () {
         var index = parseFloat(x);
 
         if (index % 1 === 0) {
-            return people[index].get('name');
+            return people[index].get('fullName');
         } else {
             return '';
         }
     }
+}
+
+function setupUsersFromJson (usersJson) {
+    var emberUsers = usersJson.map(function (userJson) {
+        var user = App.personModel.create();
+        user.set('firstName', userJson.firstName);
+        user.set('lastName', userJson.lastName);
+        user.set('userName', userJson.userName);
+
+        var expenses = [];
+        for (var i = 0; i < userJson.expenses.length; i++) {
+            var expense = App.expenseModel.create(userJson.expenses[i]);
+            expense.set('payer', user);
+            expenses.push(expense);
+        }
+
+        user.set('expenses', expenses);
+        return user;
+    });
+
+    return emberUsers;
+}
+
+function addExpenseForUser (userName, expense) {
+    var user = App.peopleController.findProperty('userName', userName);
+    expense.timeStamp = new Date();
+    expense.payer = user;
+    var emberExpense = App.expenseModel.create(expense);
+    user.get('expenses').pushObject(emberExpense);
 }

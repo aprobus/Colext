@@ -9,8 +9,6 @@
     <div class="span4" style="text-align:center;">
         <div id="expenseGraphContainer" style="height:400px;width:100%;">
         </div>
-
-        <button class="btn btn-large btn-danger">Payout</button>
     </div>
 
 
@@ -18,38 +16,31 @@
         <script type="text/x-handlebars">
             {{#view App.summaryTableView class="table table-bordered" tagName="table"}}
             <thead>
-            <tr>
-                <td></td>
-                {{#each people}}
-                    <td style="text-align:center;">{{name}}</td>
-                {{/each}}
-            </tr>
+                <tr>
+                    <td></td>
+                    <td>Paid</td>
+                    <td>Payout</td>
+                </tr>
             </thead>
 
             <tbody>
-            <tr>
-                <td>Paid</td>
                 {{#each people}}
-                    <td style="text-align:center;">${{paidString}}</td>
+                    <tr>
+                        <td>{{fullName}}</td>
+                        <td>${{paidForPayoutString}}</td>
+                        <td>
+                            {{#if inDebtForPayout}}
+                                <span class="label label-important">${{absOweForPayoutString}}</span>
+                            {{else}}
+                                <span class="label label-success">${{absOweForPayoutString}}</span>
+                            {{/if}}
+                        </td>
+                    </tr>
                 {{/each}}
-            </tr>
-
-            <tr>
-                <td>Payout</td>
-                {{#each people}}
-                    <td  style="text-align:center;">
-                        {{#if inDebt}}
-                            <span class="label label-important">${{absOweString}}</span>
-                        {{else}}
-                            <span class="label label-success">${{absOweString}}</span>
-                        {{/if}}
-                    </td>
-                {{/each}}
-            </tr>
             </tbody>
             {{/view}}
         </script>
-        <div id="expenseFormWrapper">
+        <div id="expenseFormWrapper" style="margin-bottom:5px;">
             <script type="text/x-handlebars">
                 {{#view App.expenseFormView class="form-vertical" tagName="form"}}
                     <label class="control-label" for="formPayer">Payer:</label>
@@ -79,6 +70,12 @@
                 {{/view}}
             </script>
         </div>
+
+        <div style="text-align:center;">
+            <script type="text/x-handlebars">
+                {{#view App.payoutView tagName="button" class="btn btn-large btn-danger"}}Payout{{/view}}
+            </script>
+        </div>
     </div>
 
     <div class="span4" style="text-align:center;">
@@ -97,8 +94,8 @@
                     {{#each content}}
                         <tr>
                             <td>{{timeStampString}}</td>
-                            <td>{{user}}</td>
-                            <td>${{amount}}</td>
+                            <td>{{payerString}}</td>
+                            <td>${{amountString}}</td>
                             <td>{{comment}}</td>
                         </tr>
                     {{/each}}

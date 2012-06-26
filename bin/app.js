@@ -39,12 +39,14 @@ configLoader.load(function (err, config) {
     // Routes
     var routes = {
         main: require('./../routes/index'),
-        current: require('./../routes/current').create(retUsers)
+        current: require('./../routes/current').create(retUsers),
+        payout: require('./../routes/payout').create(couchDB)
     };
 
     app.get('/', routes.main.index);
     app.get('/current', routes.current.index);
     app.get('/current/add/:userName', routes.current.add);
+    app.get('/payout', routes.payout.add);
 
     app.listen(config.server.port, function(){
         console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
