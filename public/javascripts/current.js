@@ -188,14 +188,12 @@ App.payoutController = Ember.Object.create({
   Represents the data used when adding an expense
  */
 App.expenseFormController = Ember.Object.create({
-    user: null,
     amount: null,
     comment: null,
 
     reset: function () {
         App.formAlertController.set('errors', null);
 
-        this.set('user', null);
         this.set('amount', null);
         this.set('comment', null);
     },
@@ -207,8 +205,10 @@ App.expenseFormController = Ember.Object.create({
           timeStamp: new Date()
         };
 
+        var userName = $.cookie('userName');
+
         var formData = {
-            payer: this.get('user'),
+            payer: userName,
             expense: expense
         };
 
@@ -244,7 +244,7 @@ App.expenseFormController = Ember.Object.create({
         }
 
         var formData = this.getFormData();
-        var payer = formData.payer.get('userName');
+        var payer = formData.payer;
 
         var expensePartial = {
             amount: formData.expense.amount,
@@ -319,6 +319,48 @@ App.pageController = Ember.Object.create({
     }.property('currentPage', 'App.payoutController.expensesForPayout.@each')
 });
 
+App.loginController = Ember.Object.create({
+    userName: null,
+    password: null,
+    loggedIn: false,
+
+    login: function () {
+        var self = this;
+        var userName = this.get('userName');
+        var password = this.get('password');
+
+        var loginData = {
+            userName: userName,
+            password: password
+        };
+
+        $.post('/login', loginData, onPostComplete, 'json');
+
+        function onPostComplete (responseData) {
+            if (responseData && responseData.ok) {
+                self.set('loggedIn', true);
+                console.log("Logged in as: " + $.cookie('userName'));
+            }
+        }
+    },
+
+    logout: function () {
+        this.set('loggedIn', false);
+    },
+
+    loggedInChanged: function () {
+        var loggedIn = this.get('loggedIn');
+
+        if (loggedIn) {
+            this.set('userName', $.cookie('userName'));
+            getAllData();
+        } else {
+            $.cookie('authorization', null);
+            App.peopleController.set('content', []);
+        }
+    }.observes('loggedIn')
+})
+
 //------------------------------- Views -------------------------------
 
 /*
@@ -348,21 +390,6 @@ App.expenseFormView = Ember.View.extend({
  */
 App.expenseFormControls = Ember.Object.create({
     /*
-        View to select which user to add expenses to
-     */
-    nameSelectorView: Ember.Select.extend({
-        attributeBindings: ['name'],
-        name: 'payer',
-
-        selectionBinding: 'App.expenseFormController.user',
-        optionLabelPath: 'content.fullName',
-        optionValuePath: 'content.userName',
-        contentBinding: 'App.peopleController.content',
-
-        prompt: "Select a User"
-    }),
-
-    /*
         View to add a comment about the expense
      */
     commentView: Ember.TextField.extend({
@@ -389,9 +416,12 @@ App.expenseFormControls = Ember.Object.create({
         View to submit the expense
      */
     submitView: Ember.Button.extend({
-        attributeBindings: ['type', 'value'],
+        attributeBindings: ['type', 'value', 'hide:disabled'],
         value: 'Submit',
         type: 'submit',
+        hide: function () {
+            return !App.loginController.get('loggedIn');
+        }.property('App.loginController.loggedIn'),
 
         click: function (event) {
             event.preventDefault();
@@ -465,9 +495,67 @@ App.payoutView = Ember.View.extend({
     }
 });
 
+App.loginControls = Ember.Object.create({
+    userNameView: Ember.TextField.extend({
+        attributeBindings: ['placeholder'],
+        placeholder: 'userName',
+
+        valueBinding: 'App.loginController.userName'
+    }),
+
+    passwordView: Ember.TextField.extend({
+        attributeBindings: ['placeholder'],
+        placeholder: 'Password',
+
+        type: 'password',
+        valueBinding: 'App.loginController.password'
+    }),
+
+    submitView: Ember.View.extend({
+        attributeBindings: ['type', 'value'],
+        type: 'submit',
+        value: 'Login',
+
+        click: function (event) {
+            event.preventDefault();
+            App.loginController.login();
+        }
+    }),
+
+    logoutView: Ember.View.extend({
+        attributeBindings: ['type', 'value'],
+        type: 'button',
+        value: 'Log Out',
+
+        click: function (event) {
+            event.preventDefault();
+            App.loginController.logout();
+        }
+    })
+});
+
 //------------------------------- Other -------------------------------
 
 $(document).ready(function() {
+    var userName = $.cookie('authorization');
+
+    if (userName) {
+        App.loginController.set('loggedIn', true);
+    }
+
+    /*jQuery.getJSON('/current', function(reply) {
+        if (reply && reply.error) {
+            App.formAlertController.set('errors', [reply.error && reply.error.description]);
+        } else if (reply && reply.users) {
+            var emberPeople = setupUsersFromJson(reply.users);
+            App.peopleController.set('content', emberPeople);
+        } else {
+            App.formAlertController.set('errors', ['Unknown error while connecting to server']);
+        }
+    });*/
+});
+
+function getAllData () {
     jQuery.getJSON('/current', function(reply) {
         if (reply && reply.error) {
             App.formAlertController.set('errors', [reply.error && reply.error.description]);
@@ -478,7 +566,7 @@ $(document).ready(function() {
             App.formAlertController.set('errors', ['Unknown error while connecting to server']);
         }
     });
-});
+}
 
 function drawGraph () {
     var people = App.peopleController.get('content');

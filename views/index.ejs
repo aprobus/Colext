@@ -43,9 +43,6 @@
         <div id="expenseFormWrapper" style="margin-bottom:5px;">
             <script type="text/x-handlebars">
                 {{#view App.expenseFormView class="form-vertical" tagName="form"}}
-                    <label class="control-label" for="formPayer">Payer:</label>
-                    {{view App.expenseFormControls.nameSelectorView id="formPayer"}}
-
                     <label class="control-label" for="formAmount">Amount:</label>
                     ${{view App.expenseFormControls.amountView id="formAmount" }}
 

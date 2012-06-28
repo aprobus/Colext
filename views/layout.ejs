@@ -7,6 +7,7 @@
         <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap-responsive.min.css"/>
         <link rel="stylesheet" type="text/css" href="/stylesheets/current.css"/>
         <script type="text/javascript" src="/javascripts/libraries/jquery-1.7.2.min.js"></script>
+        <script type="text/javascript" src="/javascripts/libraries/jquery.cookie.js"></script>
         <script type="text/javascript" src="/javascripts/libraries/bootstrap.min.js"></script>
         <script type="text/javascript" src="/javascripts/libraries/bootstrap-tooltip.js"></script>
         <script type="text/javascript" src="/javascripts/libraries/flotr2.min.js"></script>
@@ -18,10 +19,22 @@
             <div class="navbar-inner">
                 <div class="container">
                     <span class="brand"><%= title %></span>
+
+                    <form class="navbar-form pull-right">
+                        <script type="text/x-handlebars">
+                            {{#if App.loginController.loggedIn }}
+                                <span>Welcome, {{App.loginController.userName}}</span>
+                                {{view App.loginControls.logoutView tagName="input" class="span1 btn btn-danger"}}
+                            {{else}}
+                                {{view App.loginControls.userNameView class="span1"}}
+                                {{view App.loginControls.passwordView class="span1"}}
+                                {{view App.loginControls.submitView tagName="input" class="span1 btn btn-primary"}}
+                            {{/if}}
+                        </script>
+                    </form>
                 </div>
             </div>
         </div>
-
 
         <div class="container">
             <%- body %>
