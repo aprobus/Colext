@@ -429,7 +429,10 @@ App.loginController = Ember.Object.create({
     },
 
     logout: function () {
-        this.set('loggedIn', false);
+        var self = this;
+        $.getJSON('/logout', function (reply) {
+            self.set('loggedIn', false);
+        });
     },
 
     loggedInChanged: function () {
