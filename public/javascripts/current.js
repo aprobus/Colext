@@ -9,39 +9,21 @@ App.personModel = Ember.Object.extend({
     firstName: null,
     lastName: null,
     userName: null,
-    expenses: [],
 
     fullName: function () {
         return this.get('firstName') + ' ' + this.get('lastName');
     }.property('firstName', 'lastName'),
 
     expensesForPayout: function () {
-        var expenses = this.get('expenses');
-        var start = App.payoutController.get('start');
-        var end = App.payoutController.get('end');
+        var expenses = App.displayableExpensesController.get('expensesForPayout');
+        var userName = this.get('userName');
 
-        if (!start && !end) {
-            return expenses;
-        } else if (start && !end) {
-            return expenses.filter(expenseAfterDate);
-        } else if (!start && end) {
-            return expenses.filter(expenseBeforeDate);
-        } else {
-            return expenses.filter(expenseBetweenDate);
-        }
+        var userExpenses = expenses.filter(function (expense) {
+            return expense.get('payer').get('userName') === userName;
+        });
 
-        function expenseAfterDate (expense) {
-            return expense.timeStamp > start;
-        }
-
-        function expenseBeforeDate (expense) {
-            return expense.timeStamp < end;
-        }
-
-        function expenseBetweenDate (expense) {
-            return expenseAfterDate(expense) && expenseBeforeDate(expense);
-        }
-    }.property('expenses.@each.paid', 'App.payoutController.start', 'App.payoutController.end'),
+        return userExpenses;
+    }.property('App.displayableExpensesController.expensesForPayout.@each'),
 
     paidForPayout: function() {
         var totalExpenses = 0.0;
@@ -65,7 +47,9 @@ App.personModel = Ember.Object.extend({
         var userPaid = this.get('paidForPayout');
 
         return userPaid - individualShare;
-    }.property('App.payoutController.totalPaid', 'App.peopleController.numPeople', 'paidForPayout'),
+    }.property('App.displayableExpensesController.totalPaid',
+        'App.peopleController.numPeople',
+        'paidForPayout'),
 
     absOweForPayoutString: function () {
         var owedString = Math.abs(this.get('oweForPayout')).toFixed(2);
@@ -74,12 +58,7 @@ App.personModel = Ember.Object.extend({
 
     inDebtForPayout: function () {
         return this.get('oweForPayout') < 0;
-    }.property('oweForPayout'),
-
-    addExpense: function (expense) {
-        expense.set('payer', this);
-        this.get('expenses').pushObject(expense);
-    }
+    }.property('oweForPayout')
 });
 
 App.expenseModel = Ember.Object.extend({
@@ -90,7 +69,7 @@ App.expenseModel = Ember.Object.extend({
 
     timeStampString: function () {
         var timeStamp = this.get('timeStamp');
-        var timeStampDate = new Date(timeStamp);
+        var timeStampDate = new Date(timeStamp * 1000);
         var day = timeStampDate.getDate();
         var month = timeStampDate.getMonth() + 1;
         var year = timeStampDate.getFullYear().toString().substring(2);
@@ -115,9 +94,74 @@ App.expenseModel = Ember.Object.extend({
 App.peopleController = Ember.ArrayController.create({
     content: [],
 
+    addPerson: function (userName, firstName, lastName) {
+        var person = App.personModel.create({
+            userName: userName,
+            firstName: firstName,
+            lastName: lastName
+        });
+
+        this.get('content').pushObject(person);
+    },
+
+    setPeople: function (users) {
+        var people = [];
+        var person = null;
+
+        for (var i = 0; i < users.length; i++) {
+            person = App.personModel.create({
+                userName: users[i].userName,
+                firstName: users[i].firstName,
+                lastName: users[i].lastName
+            });
+
+            people.push(person);
+        }
+
+        this.set('content', people);
+    },
+
     numPeople: function () {
         return this.get('content').length;
     }.property('content.@each')
+});
+
+App.expensesController = Ember.ArrayController.create({
+    content: [],
+
+    addExpense: function (userName, amount, comment, timeStamp) {
+        var payer = App.peopleController.get('content').findProperty('userName', userName);
+
+        var expense = App.expenseModel.create({
+            payer: payer,
+            amount: amount,
+            comment: comment,
+            timeStamp: timeStamp || (new Date().getTime() / 1000)
+        });
+
+        this.get('content').pushObject(expense);
+    },
+
+    setExpenses: function (expenses) {
+        var userExpenses = [];
+        var payer = null;
+        var expense = null;
+
+        for (var i = 0; i < expenses.length; i++) {
+            payer = App.peopleController.get('content').findProperty('userName', expenses[i].userName);
+
+            expense = App.expenseModel.create({
+                payer: payer,
+                amount: expenses[i].amount,
+                comment: expenses[i].comment,
+                timeStamp: expenses[i].timeStamp || new Date().getTime()
+            });
+
+            userExpenses.push(expense);
+        }
+
+        this.set('content', userExpenses);
+    }
 });
 
 /*
@@ -184,6 +228,47 @@ App.payoutController = Ember.Object.create({
     onExpensesForPayoutChanged: drawGraph.observes('expensesForPayout.@each')
 });
 
+App.displayableExpensesController = Ember.Object.create({
+    expensesForPayout: function () {
+        var startTime = App.payoutController.get('start');
+        var endTime = App.payoutController.get('end');
+        var allExpenses = App.expensesController.get('content');
+
+        var payoutExpenses = allExpenses.filter(function (expense) {
+           var timeStamp = expense.get('timeStamp');
+            return (!startTime || timeStamp > startTime) && (!endTime || timeStamp < endTime);
+        });
+
+        var sortedExpenses = payoutExpenses.sort(function (expense1, expense2) {
+            var timeStamp1 = expense1.get('timeStamp');
+            var timeStamp2 = expense2.get('timeStamp');
+
+            if (timeStamp1 > timeStamp2) {
+                return -1;
+            } else if (timeStamp1 < timeStamp2) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+
+        return sortedExpenses;
+    }.property('App.expensesController.@each',
+        'App.payoutController.start',
+        'App.payoutController.end'),
+
+    totalPaid: function () {
+        var expenses = this.get('expensesForPayout');
+        var total = 0.0;
+
+        for (var i = 0; i < expenses.length; i++) {
+            total += expenses[i].get('amount')
+        }
+
+        return total;
+    }.property('expensesForPayout.@each.amount')
+});
+
 /*
   Represents the data used when adding an expense
  */
@@ -244,19 +329,18 @@ App.expenseFormController = Ember.Object.create({
         }
 
         var formData = this.getFormData();
-        var payer = formData.payer;
 
         var expensePartial = {
             amount: formData.expense.amount,
             comment: formData.expense.comment
         };
 
-        jQuery.getJSON('/current/add/' + payer, expensePartial, function(reply) {
+        jQuery.getJSON('/current/add/' + formData.payer, expensePartial, function(reply) {
             if (reply && reply.errors && reply.errors.length > 0) {
                 App.formAlertController.set('errors', reply.errors);
-            } else if (reply && reply.status === 200) {
+            } else if (reply && reply.ok) {
                 App.formAlertController.set('errors', null);
-                addExpenseForUser(payer, expensePartial);
+                App.expensesController.addExpense(formData.payer, expensePartial.amount, expensePartial.comment);
                 App.expenseFormController.reset();
             } else {
                 App.formAlertController.set('errors', ['Unknown response from server']);
@@ -280,17 +364,17 @@ App.pageController = Ember.Object.create({
 
     hasOlderPage: function () {
         var currentPage = this.get('currentPage');
-        var expenses = App.payoutController.get('expensesForPayout').length;
+        var expenses = App.displayableExpensesController.get('expensesForPayout').length;
         var totalPages = Math.ceil(expenses / 10.0);
 
         return (currentPage + 1) < totalPages;
-    }.property('App.payoutController.expensesForPayout.@each', 'currentPage'),
+    }.property('App.displayableExpensesController.expensesForPayout.@each', 'currentPage'),
 
     hasNewerPage: function () {
         var currentPage = this.get('currentPage');
 
         return currentPage > 0;
-    }.property('App.payoutController.expensesForPayout.@each', 'currentPage'),
+    }.property('currentPage'),
 
     viewOlder: function () {
         if (this.get('hasOlderPage')) {
@@ -308,7 +392,7 @@ App.pageController = Ember.Object.create({
 
     expensesForPage: function () {
         var currentPage = this.get('currentPage');
-        var expenses = App.payoutController.get('expensesForPayout');
+        var expenses = App.displayableExpensesController.get('expensesForPayout');
         var maxIndex = currentPage * 10 + 10;
 
         if (maxIndex > expenses.length) {
@@ -316,7 +400,7 @@ App.pageController = Ember.Object.create({
         }
 
         return expenses.slice(currentPage * 10, maxIndex);
-    }.property('currentPage', 'App.payoutController.expensesForPayout.@each')
+    }.property('currentPage', 'App.displayableExpensesController.expensesForPayout.@each')
 });
 
 App.loginController = Ember.Object.create({
@@ -339,7 +423,7 @@ App.loginController = Ember.Object.create({
         function onPostComplete (responseData) {
             if (responseData && responseData.ok) {
                 self.set('loggedIn', true);
-                console.log("Logged in as: " + $.cookie('userName'));
+                self.set('password', null);
             }
         }
     },
@@ -357,9 +441,10 @@ App.loginController = Ember.Object.create({
         } else {
             $.cookie('authorization', null);
             App.peopleController.set('content', []);
+            App.expensesController.set('content', []);
         }
     }.observes('loggedIn')
-})
+});
 
 //------------------------------- Views -------------------------------
 
@@ -537,9 +622,10 @@ App.loginControls = Ember.Object.create({
 //------------------------------- Other -------------------------------
 
 $(document).ready(function() {
-    var userName = $.cookie('authorization');
+    var hasAuthorization = Boolean($.cookie('authorization'));
+    var hasUserName = Boolean($.cookie('userName'));
 
-    if (userName) {
+    if (hasAuthorization && hasUserName) {
         App.loginController.set('loggedIn', true);
     }
 
@@ -559,11 +645,15 @@ function getAllData () {
     jQuery.getJSON('/current', function(reply) {
         if (reply && reply.error) {
             App.formAlertController.set('errors', [reply.error && reply.error.description]);
-        } else if (reply && reply.users) {
-            var emberPeople = setupUsersFromJson(reply.users);
-            App.peopleController.set('content', emberPeople);
-        } else {
-            App.formAlertController.set('errors', ['Unknown error while connecting to server']);
+            return;
+        }
+
+        if (reply && reply.users) {
+            App.peopleController.setPeople(reply.users);
+        }
+
+        if (reply && reply.expenses) {
+            App.expensesController.setExpenses(reply.expenses);
         }
     });
 }
@@ -605,33 +695,4 @@ function drawGraph () {
             return '';
         }
     }
-}
-
-function setupUsersFromJson (usersJson) {
-    var emberUsers = usersJson.map(function (userJson) {
-        var user = App.personModel.create();
-        user.set('firstName', userJson.firstName);
-        user.set('lastName', userJson.lastName);
-        user.set('userName', userJson.userName);
-
-        var expenses = [];
-        for (var i = 0; i < userJson.expenses.length; i++) {
-            var expense = App.expenseModel.create(userJson.expenses[i]);
-            expense.set('payer', user);
-            expenses.push(expense);
-        }
-
-        user.set('expenses', expenses);
-        return user;
-    });
-
-    return emberUsers;
-}
-
-function addExpenseForUser (userName, expense) {
-    var user = App.peopleController.findProperty('userName', userName);
-    expense.timeStamp = new Date();
-    expense.payer = user;
-    var emberExpense = App.expenseModel.create(expense);
-    user.get('expenses').pushObject(emberExpense);
 }

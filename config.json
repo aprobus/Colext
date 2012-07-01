@@ -3,8 +3,8 @@
         "port": 3000
     },
 
-    "couch": {
-        "port": 5984,
-        "host": "192.168.1.130"
+    "database": {
+        "port": 3306,
+        "host": "localhost"
     }
 }

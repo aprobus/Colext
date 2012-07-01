@@ -1,6 +1,8 @@
 var express = require('express');
 var nano = require('nano');
+var mysql = require('mysql');
 var path = require('path');
+var mySqlConnector = require('../lib/databaseConnectors/mySqlConnector');
 var authParser = require('../lib/middleWare/authParser');
 var credentialsValidator = require('../lib/middleWare/credentialsValidator');
 var configLoader = require('../lib/configLoader');
@@ -13,8 +15,15 @@ configLoader.load(function (err, config) {
 
     var app = module.exports = express.createServer();
 
-    var couchDB = nano('http://' + config.couch.host + ':' + config.couch.port);
-    var retUsers = couchDB.db.use('ret_users');
+    var connection = mysql.createConnection({
+        host     : config.database.host,
+        port     : config.database.port,
+        database : 'ret',
+        user     : 'retadmin',
+        password : process.argv[2]
+    });
+    connection.connect();
+    var dbConnector = mySqlConnector.create(connection);
 
     // Configuration
 
@@ -42,13 +51,13 @@ configLoader.load(function (err, config) {
     // Routes
     var routes = {
         main: require('./../routes/index'),
-        current: require('./../routes/current').create(retUsers),
-        payout: require('./../routes/payout').create(couchDB),
-        loginLogout: require('./../routes/loginLogout').create(couchDB)
+        current: require('./../routes/current').create(dbConnector),
+        payout: require('./../routes/payout').create(dbConnector),
+        loginLogout: require('./../routes/loginLogout').create(dbConnector)
     };
 
     var requiresAuth = authParser();
-    var requiresValidUser = credentialsValidator(couchDB);
+    var requiresValidUser = credentialsValidator(dbConnector);
 
     app.get('/', routes.main.index);
     app.get('/current', requiresAuth, requiresValidUser, routes.current.index);

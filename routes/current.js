@@ -1,6 +1,6 @@
 
-function Router (usersDb) {
-    this.usersDb = usersDb;
+function Router (dbConnector) {
+    this.dbConnector = dbConnector;
 
     var self = this;
     this.index = function (req, res) {
@@ -18,71 +18,29 @@ function Router (usersDb) {
             return;
         }
 
-        self._add(userName, expense, res);
+        self._add(req.authorization.user, expense, res);
     };
 }
 
-Router.prototype._add = function(userName, expense, res){
-    var self = this;
-    this.usersDb.get(userName, function (err, user) {
+Router.prototype._add = function(user, expense, res){
+    this.dbConnector.addExpense(user, expense.amount, expense.comment, function (err) {
        if (err) {
-           res.json({errors: [err], status: 200});
-           return;
+           res.json({ok: false, error: err});
+       } else {
+           res.json({ok: true});
        }
-
-       user.expenses.push(expense);
-
-       self.usersDb.insert(user, userName, function (err) {
-          if (err) {
-              res.json({errors: [err], status: 200});
-          } else {
-              res.json({status: 200});
-          }
-       });
     });
 };
 
 Router.prototype._index = function(req, res){
-    var self = this;
-    this.usersDb.list(function (err, docsList) {
-        if (err) {
-            res.json({error: err }, 200);
-            return;
-        }
-
-        var keys = docsList.rows.map(function (doc) {
-           return doc.key;
-        });
-
-        var fetchOptions = {
-            keys: keys
-        };
-
-        self.usersDb.fetch(fetchOptions, function (err, docs) {
-           if (err) {
-               res.json({error: err }, 200);
-               return;
-           }
-
-            var retUsers = docs.rows.map(function (doc) {
-                return new RetUser(doc.key, doc.doc);
-            });
-
-            var returnJson = {
-                users: retUsers
-            };
-
-            res.json(returnJson, 200);
-        });
+    this.dbConnector.getAllInformationForUser(req.authorization.userName, function (err, results) {
+       if (err) {
+           res.json({ok: false, error: err});
+       } else {
+           res.json({ok: true, users: results.users, expenses: results.expenses}, 200);
+       }
     });
 };
-
-function RetUser (key, doc) {
-    this.userName = key;
-    this.firstName = doc.firstName;
-    this.lastName = doc.lastName;
-    this.expenses = doc.expenses;
-}
 
 function parseExpense (amount, comment) {
     var numericAmount = NaN;
