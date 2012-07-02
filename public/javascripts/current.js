@@ -40,7 +40,7 @@ App.personModel = Ember.Object.extend({
     }.property('paidForPayout'),
 
     oweForPayout: function () {
-        var totalPaid = App.payoutController.get('totalPaid');
+        var totalPaid = App.displayableExpensesController.get('totalPaid');
         var numPeople = App.peopleController.get('numPeople');
         var individualShare = totalPaid / numPeople;
 
@@ -69,12 +69,8 @@ App.expenseModel = Ember.Object.extend({
 
     timeStampString: function () {
         var timeStamp = this.get('timeStamp');
-        var timeStampDate = new Date(timeStamp * 1000);
-        var day = timeStampDate.getDate();
-        var month = timeStampDate.getMonth() + 1;
-        var year = timeStampDate.getFullYear().toString().substring(2);
-
-        return month + '/' + day + '/' + year;
+        var momentDate = moment.unix(timeStamp);
+        return shortDateFormat(momentDate);
     }.property('timeStamp'),
 
     payerString: function () {
@@ -84,6 +80,55 @@ App.expenseModel = Ember.Object.extend({
     amountString: function () {
         return this.get('amount').toFixed(2);
     }.property('amount')
+});
+
+App.timeSpanModel = Ember.Object.extend({
+    from: null,
+    to: null,
+
+    fromStringShort: function () {
+        var from = this.get('from');
+
+        if (from === Number.NEGATIVE_INFINITY) {
+            return 'Start';
+        }
+
+        var fromDate = moment.unix(from);
+        return shortDateFormat(fromDate);
+    }.property('from'),
+
+    toStringShort: function () {
+        var to = this.get('to');
+
+        if (to === Number.POSITIVE_INFINITY) {
+            return 'Now';
+        }
+
+        var toDate = moment.unix(to);
+        return shortDateFormat(toDate);
+    }.property('to'),
+
+    fromStringLong: function () {
+        var from = this.get('from');
+
+        if (from === Number.NEGATIVE_INFINITY) {
+            return 'Start';
+        }
+
+        var fromDate = moment.unix(from);
+        return longDateFormat(fromDate);
+    }.property('from'),
+
+    toStringLong: function () {
+        var to = this.get('to');
+
+        if (to === Number.POSITIVE_INFINITY) {
+            return 'Now';
+        }
+
+        var toDate = moment.unix(to);
+        return longDateFormat(toDate);
+    }.property('to')
 });
 
 //------------------------------- Controllers -------------------------------
@@ -169,74 +214,81 @@ App.expensesController = Ember.ArrayController.create({
  */
 App.payoutController = Ember.Object.create({
     payouts: [],
-    start: null,
-    end: null,
-
-    lastPayoutChanged: function () {
-        var content = this.get('payouts');
-        if (!content || content.length === 0) {
-            return;
-        }
-
-        this.set('start', content[content.length - 1]);
-    }.observes('payouts.@each'),
-
-    totalPaid: function () {
-        var people = App.peopleController.get('content');
-
-        var total = 0.0;
-        for (var i = 0; i < people.length; i++) {
-            total += people[i].get('paidForPayout');
-        }
-
-        return total;
-    }.property('App.peopleController.content.@each.paidForPayout'),
 
     addPayout: function () {
         var self = this;
         jQuery.getJSON('/payout', function (reply) {
             if (reply && reply.ok) {
-                self.get('payouts').pushObject(new Date().getTime());
+                self.get('payouts').pushObject(new Date().getTime() / 1000);
+                App.timeSpanController.setSelectedToNewest();
             }
         });
-    },
+    }
+});
 
-    expensesForPayout: function () {
-        var people = App.peopleController.get('content');
-        var expenses = [];
+App.timeSpanController = Ember.Object.create({
+    selectedTimeSpan: null,
 
-        for (var i = 0; i < people.length; i++) {
-            expenses = expenses.concat(people[i].get('expensesForPayout'));
+    selectedOrDefault: function () {
+        var selected = this.get('selectedTimeSpan');
+        if (selected) {
+            return selected;
+        } else {
+            var timeSpans = this.get('timeSpans');
+            return timeSpans[0];
+        }
+    }.property('selectedTimeSpan', 'timeSpans'),
+
+    timeSpans: function () {
+        var payouts = App.payoutController.get('payouts').sort();
+
+        if (payouts.length === 0) {
+            var timeSpanAllTime = App.timeSpanModel.create({
+                from: Number.NEGATIVE_INFINITY,
+                to: Number.POSITIVE_INFINITY
+            });
+
+            return [timeSpanAllTime];
         }
 
-        var sortedExpenses = expenses.sort(function (expense1, expense2) {
-            var timeStamp1 = new Date(expense1.get('timeStamp'));
-            var timeStamp2 = new Date(expense2.get('timeStamp'));
+        var payoutTimeSpans = [];
+        payoutTimeSpans.push(App.timeSpanModel.create({
+            from: Number.NEGATIVE_INFINITY,
+            to: payouts[0]
+        }));
 
-            if (timeStamp1 > timeStamp2) {
-                return -1;
-            } else if (timeStamp1 < timeStamp2) {
-                return 1;
-            } else {
-                return 0;
-            }
-        });
+        for (var i = 0; i < payouts.length - 1; i++) {
+            payoutTimeSpans.push(App.timeSpanModel.create({
+                from: payouts[i],
+                to: payouts[i + 1]
+            }));
+        }
 
-        return sortedExpenses;
-    }.property('App.peopleController.content.@each.expensesForPayout.@each'),
+        payoutTimeSpans.push(App.timeSpanModel.create({
+            from: payouts[payouts.length - 1],
+            to: Number.POSITIVE_INFINITY
+        }));
 
-    onExpensesForPayoutChanged: drawGraph.observes('expensesForPayout.@each')
+        return payoutTimeSpans.reverse();
+    }.property('App.payoutController.payouts.@each'),
+
+    setSelectedToNewest: function () {
+        var timeSpans = this.get('timeSpans');
+        this.set('selectedTimeSpan', timeSpans[0]);
+    }
 });
 
 App.displayableExpensesController = Ember.Object.create({
     expensesForPayout: function () {
-        var startTime = App.payoutController.get('start');
-        var endTime = App.payoutController.get('end');
+        var timeSpan = App.timeSpanController.get('selectedOrDefault');
+        var startTime = timeSpan.get('from');
+        var endTime = timeSpan.get('to');
+
         var allExpenses = App.expensesController.get('content');
 
         var payoutExpenses = allExpenses.filter(function (expense) {
            var timeStamp = expense.get('timeStamp');
-            return (!startTime || timeStamp > startTime) && (!endTime || timeStamp < endTime);
+            return (timeStamp > startTime) && (timeStamp < endTime);
         });
 
         var sortedExpenses = payoutExpenses.sort(function (expense1, expense2) {
@@ -253,9 +305,7 @@ App.displayableExpensesController = Ember.Object.create({
         });
 
         return sortedExpenses;
-    }.property('App.expensesController.@each',
-        'App.payoutController.start',
-        'App.payoutController.end'),
+    }.property('App.expensesController.@each', 'App.timeSpanController.selectedOrDefault'),
 
     totalPaid: function () {
         var expenses = this.get('expensesForPayout');
@@ -266,7 +316,9 @@ App.displayableExpensesController = Ember.Object.create({
         }
 
         return total;
-    }.property('expensesForPayout.@each.amount')
+    }.property('expensesForPayout.@each.amount'),
+
+    onExpensesForPayoutChanged: drawGraph.observes('expensesForPayout.@each')
 });
 
 /*
@@ -583,6 +635,17 @@ App.payoutView = Ember.View.extend({
     }
 });
 
+App.timeSpanView = Ember.View.extend({
+    content: null, //To be set to a timeSpan
+
+    select: function () {
+        var timeSpan = this.get('content');
+        var from = timeSpan.get('from') || Number.NEGATIVE_INFINITY;
+        //App.payoutController.setPayout(from);
+        App.timeSpanController.set('selectedTimeSpan', timeSpan);
+    }
+});
+
 App.loginControls = Ember.Object.create({
     userNameView: Ember.TextField.extend({
         attributeBindings: ['placeholder'],
@@ -631,17 +694,6 @@ $(document).ready(function() {
     if (hasAuthorization && hasUserName) {
         App.loginController.set('loggedIn', true);
     }
-
-    /*jQuery.getJSON('/current', function(reply) {
-        if (reply && reply.error) {
-            App.formAlertController.set('errors', [reply.error && reply.error.description]);
-        } else if (reply && reply.users) {
-            var emberPeople = setupUsersFromJson(reply.users);
-            App.peopleController.set('content', emberPeople);
-        } else {
-            App.formAlertController.set('errors', ['Unknown error while connecting to server']);
-        }
-    });*/
 });
 
 function getAllData () {
@@ -698,4 +750,12 @@ function drawGraph () {
             return '';
         }
     }
+}
+
+function shortDateFormat (momentDate) {
+    return momentDate.format('M/D/YY');
+}
+
+function longDateFormat (momentDate) {
+    return momentDate.format('MMM Do, YYYY');
 }

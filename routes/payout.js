@@ -1,5 +1,5 @@
-function Router (couchServer) {
-    this.server = couchServer;
+function PayoutRouter (dbConnector) {
+    this.dbConnector = dbConnector;
 
     var self = this;
 
@@ -8,10 +8,17 @@ function Router (couchServer) {
     }
 }
 
-Router.prototype.addExpense = function (req, res) {
-    res.json({ok: true}, 200);
+PayoutRouter.prototype.addExpense = function (req, res) {
+    this.dbConnector.addPayout(req.authorization.user.groupId, function (err) {
+        if (err) {
+            res.json({ok: false, error: err}, 200);
+        } else {
+            res.json({ok: true}, 200);
+        }
+    });
+
 };
 
-exports.create = function (couchServer) {
-  return new Router(couchServer);
+exports.create = function (dbConnector) {
+  return new PayoutRouter(dbConnector);
 };

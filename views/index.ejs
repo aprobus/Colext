@@ -1,6 +1,38 @@
 <div class="row">
     <div class="span4 offset4" style="text-align:center;">
-        <h1>Current Expenses</h1>
+        <h1>Expenses</h1>
+    </div>
+</div>
+
+<div class="row" style="margin-bottom:5px;">
+    <div class="span4 offset4">
+        <script type="text/x-handlebars">
+            <div class="btn-group" style="display:table;margin-left:auto;margin-right:auto;">
+                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                    <!--June 14, 2012 - Now-->
+                    {{App.timeSpanController.selectedOrDefault.fromStringLong}} - {{App.timeSpanController.selectedOrDefault.toStringLong}}
+                    <span class="caret"></span>
+                </a>
+                <table class="table dropdown-menu">
+                    <thead>
+                        <tr>
+                            <td>From</td>
+                            <td>To</td>
+                            <td></td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each App.timeSpanController.timeSpans }}
+                            {{#view App.timeSpanView contentBinding="this" tagName="tr" }}
+                                <td>{{content.fromStringLong}}</td>
+                                <td>{{content.toStringLong}}</td>
+                                <td><button {{action "select" on="click"}} class="btn btn-primary">Select</button></td>
+                            {{/view}}
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </script>
     </div>
 </div>
 
