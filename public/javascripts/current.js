@@ -8,7 +8,7 @@ window.App = Ember.Application.create();
 App.personModel = Ember.Object.extend({
     firstName: null,
     lastName: null,
-    userName: null,
+    email: null,
 
     fullName: function () {
         return this.get('firstName') + ' ' + this.get('lastName');
@@ -16,10 +16,10 @@ App.personModel = Ember.Object.extend({
 
     expensesForPayout: function () {
         var expenses = App.displayableExpensesController.get('expensesForPayout');
-        var userName = this.get('userName');
+        var email = this.get('email');
 
         var userExpenses = expenses.filter(function (expense) {
-            return expense.get('payer').get('userName') === userName;
+            return expense.get('payer').get('email') === email;
         });
 
         return userExpenses;
@@ -139,9 +139,9 @@ App.timeSpanModel = Ember.Object.extend({
 App.peopleController = Ember.ArrayController.create({
     content: [],
 
-    addPerson: function (userName, firstName, lastName) {
+    addPerson: function (email, firstName, lastName) {
         var person = App.personModel.create({
-            userName: userName,
+            email: email,
             firstName: firstName,
             lastName: lastName
         });
@@ -153,12 +153,18 @@ App.peopleController = Ember.ArrayController.create({
         var people = [];
         var person = null;
 
+        var loggedInEmail = $.cookie('email');
+
         for (var i = 0; i < users.length; i++) {
             person = App.personModel.create({
-                userName: users[i].userName,
+                email: users[i].email,
                 firstName: users[i].firstName,
                 lastName: users[i].lastName
             });
+
+            if (users[i].email === loggedInEmail) {
+                App.loginController.set('loggedInUser', person);
+            }
 
             people.push(person);
         }
@@ -174,8 +180,8 @@ App.peopleController = Ember.ArrayController.create({
 App.expensesController = Ember.ArrayController.create({
     content: [],
 
-    addExpense: function (userName, amount, comment, timeStamp) {
-        var payer = App.peopleController.get('content').findProperty('userName', userName);
+    addExpense: function (email, amount, comment, timeStamp) {
+        var payer = App.peopleController.get('content').findProperty('email', email);
 
         var expense = App.expenseModel.create({
             payer: payer,
@@ -193,7 +199,7 @@ App.expensesController = Ember.ArrayController.create({
         var expense = null;
 
         for (var i = 0; i < expenses.length; i++) {
-            payer = App.peopleController.get('content').findProperty('userName', expenses[i].userName);
+            payer = App.peopleController.get('content').findProperty('email', expenses[i].email);
 
             expense = App.expenseModel.create({
                 payer: payer,
@@ -342,10 +348,10 @@ App.expenseFormController = Ember.Object.create({
           timeStamp: new Date()
         };
 
-        var userName = $.cookie('userName');
+        var email = $.cookie('email');
 
         var formData = {
-            payer: userName,
+            payer: email,
             expense: expense
         };
 
@@ -388,6 +394,7 @@ App.expenseFormController = Ember.Object.create({
         };
 
         jQuery.getJSON('/current/add/' + formData.payer, expensePartial, function(reply) {
+            console.log(reply);
             if (reply && reply.errors && reply.errors.length > 0) {
                 App.formAlertController.set('errors', reply.errors);
             } else if (reply && reply.ok) {
@@ -456,17 +463,18 @@ App.pageController = Ember.Object.create({
 });
 
 App.loginController = Ember.Object.create({
-    userName: null,
+    email: null,
     password: null,
+    loggedInUser: null,//TODO: Should probably separate this from the login from controller
     loggedIn: false,
 
     login: function () {
         var self = this;
-        var userName = this.get('userName');
+        var email = this.get('email');
         var password = this.get('password');
 
         var loginData = {
-            userName: userName,
+            email: email,
             password: password
         };
 
@@ -491,10 +499,13 @@ App.loginController = Ember.Object.create({
         var loggedIn = this.get('loggedIn');
 
         if (loggedIn) {
-            this.set('userName', $.cookie('userName'));
+            this.set('email', $.cookie('email'));
             getAllData();
         } else {
             $.cookie('authorization', null);
+            this.set('password', null);
+            this.set('email', null);
+            this.set('loggedInUser', null);
             App.peopleController.set('content', []);
             App.expensesController.set('content', []);
         }
@@ -647,11 +658,11 @@ App.timeSpanView = Ember.View.extend({
 });
 
 App.loginControls = Ember.Object.create({
-    userNameView: Ember.TextField.extend({
+    emailView: Ember.TextField.extend({
         attributeBindings: ['placeholder'],
-        placeholder: 'userName',
+        placeholder: 'user@example.com',
 
-        valueBinding: 'App.loginController.userName'
+        valueBinding: 'App.loginController.email'
     }),
 
     passwordView: Ember.TextField.extend({
@@ -689,9 +700,9 @@ App.loginControls = Ember.Object.create({
 
 $(document).ready(function() {
     var hasAuthorization = Boolean($.cookie('authorization'));
-    var hasUserName = Boolean($.cookie('userName'));
+    var hasemail = Boolean($.cookie('email'));
 
-    if (hasAuthorization && hasUserName) {
+    if (hasAuthorization && hasemail) {
         App.loginController.set('loggedIn', true);
     }
 });

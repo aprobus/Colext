@@ -24,10 +24,10 @@
                     <form class="navbar-form pull-right">
                         <script type="text/x-handlebars">
                             {{#if App.loginController.loggedIn }}
-                                <span>Welcome, {{App.loginController.userName}}</span>
+                                <span>Welcome, {{App.loginController.loggedInUser.fullName}}</span>
                                 {{view App.loginControls.logoutView tagName="input" class="span2 btn btn-danger"}}
                             {{else}}
-                                {{view App.loginControls.userNameView class="span1"}}
+                                {{view App.loginControls.emailView class="span2"}}
                                 {{view App.loginControls.passwordView class="span1"}}
                                 {{view App.loginControls.submitView tagName="input" class="span1 btn btn-primary"}}
                             {{/if}}

@@ -15,17 +15,17 @@ function Router (dbConnector) {
 }
 
 Router.prototype._login = function (req, res) {
-    var userName = req.body.userName;
+    var email = req.body.email;
     var password = req.body.password;
 
-    this.dbConnector.logUserIn(userName, password, function (err, sessionToken) {
+    this.dbConnector.logUserIn(email, password, function (err, sessionToken) {
        if (err) {
            res.header('Set-Cookie', 'authorization=;');
            res.json({ok: false, error: err.message});
        } else if (sessionToken) {
-           var userAuth = authorization.create(userName, sessionToken);
+           var userAuth = authorization.create(email, sessionToken);
            res.header('Set-Cookie', 'authorization=' + userAuth.toEncodedString());
-           res.header('Set-Cookie', 'userName=' + userName);
+           res.header('Set-Cookie', 'email=' + email);
            res.json({ok: true});
        } else {
            res.header('Set-Cookie', 'authorization=;');
@@ -35,7 +35,7 @@ Router.prototype._login = function (req, res) {
 };
 
 Router.prototype._logout = function (req, res) {
-    this.dbConnector.logUserOut(req.authorization.user.userName, function (err) {
+    this.dbConnector.logUserOut(req.authorization.user.email, function (err) {
         res.header('Set-Cookie', 'authorization=;');
         res.json({ok: true});
     });

@@ -1,11 +1,28 @@
 var express = require('express');
 var nano = require('nano');
 var mysql = require('mysql');
+var commander = require('commander');
 var path = require('path');
 var mySqlConnector = require('../lib/databaseConnectors/mySqlConnector');
 var authParser = require('../lib/middleWare/authParser');
 var credentialsValidator = require('../lib/middleWare/credentialsValidator');
 var configLoader = require('../lib/configLoader');
+
+commander
+    .version('0.0.1')
+    .option('-u, --user <userName>', 'Database user')
+    .option('-p, --password <password>', 'Password for user')
+    .parse(process.argv);
+
+if (!commander.user) {
+    console.error('Must specify a user!');
+    process.exit();
+}
+
+if (!commander.password) {
+    console.error('Must specify a password!');
+    process.exit();
+}
 
 configLoader.load(function (err, config) {
     if (err || !config) {
@@ -19,8 +36,8 @@ configLoader.load(function (err, config) {
         host     : config.database.host,
         port     : config.database.port,
         database : 'ret',
-        user     : 'retadmin',
-        password : process.argv[2]
+        user     : commander.user,
+        password : commander.password
     });
     connection.connect();
     var dbConnector = mySqlConnector.create(connection);

@@ -9,6 +9,7 @@
     "nano": "~3.0.9",
     "async": "~0.1.22",
     "hat": "0.0.3",
-    "mysql": "~2.0.0-alpha3"
+    "mysql": "~2.0.0-alpha3",
+    "commander": "~0.5.2"
   }
 }

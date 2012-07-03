@@ -8,13 +8,12 @@ function Router (dbConnector) {
     };
 
     this.add = function (req, res) {
-        var userName = req.params.userName;
+        var email = req.authorization.user.email;
         var expense = parseExpense(req.query.amount, req.query.comment);
-
-        var errors = getValidationErrors(userName, expense);
+        var errors = getValidationErrors(email, expense);
 
         if (errors.length > 0) {
-            res.json({errors: errors, status: 200});
+            res.json({ok: false, error: errors[0], status: 200});
             return;
         }
 
@@ -33,7 +32,7 @@ Router.prototype._add = function(user, expense, res){
 };
 
 Router.prototype._index = function(req, res){
-    this.dbConnector.getAllInformationForUser(req.authorization.userName, function (err, results) {
+    this.dbConnector.getAllInformationForUser(req.authorization.email, function (err, results) {
        if (err) {
            res.json({ok: false, error: err});
        } else {
@@ -60,11 +59,11 @@ function parseExpense (amount, comment) {
     return expense;
 }
 
-function getValidationErrors (userName, expense) {
+function getValidationErrors (email, expense) {
     var errors = [];
 
-    if (!userName) {
-        errors.push('Must specify a user name');
+    if (!email) {
+        errors.push('Must specify an email address');
     }
 
     if (!expense.comment) {
