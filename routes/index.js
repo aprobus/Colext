@@ -4,5 +4,5 @@
  */
 
 exports.index = function(req, res){
-  res.render('index', { title: 'Roommate Expense Tracker' })
+  res.render('index', { title: 'Colext' })
 };
