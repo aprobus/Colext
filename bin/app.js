@@ -1,13 +1,6 @@
-var express = require('express');
-var nano = require('nano');
-var mysql = require('mysql');
-var commander = require('commander');
-var path = require('path');
-var mySqlConnector = require('../lib/databaseConnectors/mySqlConnector');
-var authParser = require('../lib/middleWare/authParser');
-var credentialsValidator = require('../lib/middleWare/credentialsValidator');
 var configLoader = require('../lib/configLoader');
-var appRouter = require('../routes/appRouter');
+var commander = require('commander');
+var expensesServer = require('../lib/expensesServer');
 
 commander
     .version('0.0.1')
@@ -31,63 +24,8 @@ configLoader.load(function (err, config) {
         return;
     }
 
-    var app = module.exports = express.createServer();
+    config.database.user = commander.user;
+    config.database.password = commander.password;
 
-    var connection = mysql.createConnection({
-        host     : config.database.host,
-        port     : config.database.port,
-        database : 'ret',
-        user     : commander.user,
-        password : commander.password
-    });
-    connection.connect();
-    var dbConnector = mySqlConnector.create(connection);
-
-    // Configuration
-
-    var viewsDir = path.join(__dirname, '..', 'views');
-    var publicDir = path.join(__dirname, '..', 'public');
-
-    app.configure(function(){
-        app.set('views', viewsDir);
-        app.set('view engine', 'ejs');
-        app.use(express.cookieParser());
-        app.use(express.bodyParser());
-        app.use(express.methodOverride());
-        app.use(app.router);
-        app.use(express.static(publicDir));
-    });
-
-    app.configure('development', function(){
-        app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
-    });
-
-    app.configure('production', function(){
-        app.use(express.errorHandler());
-    });
-
-    // Routes
-    /*var routes = {
-        main: require('./../routes/index'),
-        current: require('./../routes/current').create(dbConnector),
-        payout: require('./../routes/payout').create(dbConnector),
-        loginLogout: require('./../routes/loginLogout').create(dbConnector)
-    };
-
-    var requiresAuth = authParser();
-    var requiresValidUser = credentialsValidator(dbConnector);
-
-    app.get ('/', routes.main.index);
-    app.get ('/api/userInfo/all', requiresAuth, requiresValidUser, routes.current.index);
-
-    app.post('/api/add/expense', requiresAuth, requiresValidUser, routes.current.add);
-    app.post('/api/add/payout', requiresAuth, requiresValidUser, routes.payout.addExpense.bind(routes.payout));
-
-    app.post('/api/session/login', routes.loginLogout.login);
-    app.get ('/api/session/logout', requiresAuth, requiresValidUser, routes.loginLogout.logout);*/
-    appRouter.setupRoutes(app, {dbConnector: dbConnector});
-
-    app.listen(config.server.port, function(){
-        console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
-    });
+    expensesServer.start(config);
 });
