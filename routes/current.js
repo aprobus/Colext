@@ -36,7 +36,7 @@ Router.prototype._index = function(req, res){
        if (err) {
            res.json({ok: false, error: err});
        } else {
-           res.json({ok: true, users: results.users, expenses: results.expenses}, 200);
+           res.json({ok: true, users: results.users, expenses: results.expenses, payouts: results.payouts}, 200);
        }
     });
 };

@@ -718,6 +718,10 @@ function getAllData () {
             App.peopleController.setPeople(reply.users);
         }
 
+        if (reply && reply.payouts) {
+            App.payoutController.set('payouts', reply.payouts);
+        }
+
         if (reply && reply.expenses) {
             App.expensesController.setExpenses(reply.expenses);
         }

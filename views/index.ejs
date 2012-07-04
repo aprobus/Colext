@@ -9,7 +9,6 @@
         <script type="text/x-handlebars">
             <div class="btn-group" style="display:table;margin-left:auto;margin-right:auto;">
                 <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                    <!--June 14, 2012 - Now-->
                     {{App.timeSpanController.selectedOrDefault.fromStringLong}} - {{App.timeSpanController.selectedOrDefault.toStringLong}}
                     <span class="caret"></span>
                 </a>
@@ -73,7 +72,7 @@
             {{/view}}
         </script>
         <div id="expenseFormWrapper" style="margin-bottom:5px;">
-            <div style="text-align:center"><h3>New Expense</h3></div>
+            <div style="text-align:center; border-bottom:2px solid lightgray;"><h3>New Expense</h3></div>
 
             <script type="text/x-handlebars">
                 {{#view App.expenseFormView class="form-vertical" tagName="form"}}
