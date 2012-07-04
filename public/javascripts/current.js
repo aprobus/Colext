@@ -223,12 +223,12 @@ App.payoutController = Ember.Object.create({
 
     addPayout: function () {
         var self = this;
-        jQuery.getJSON('/payout', function (reply) {
+        $.post('/api/add/payout', function (reply) {
             if (reply && reply.ok) {
                 self.get('payouts').pushObject(new Date().getTime() / 1000);
                 App.timeSpanController.setSelectedToNewest();
             }
-        });
+        }, 'json');
     }
 });
 
@@ -393,8 +393,7 @@ App.expenseFormController = Ember.Object.create({
             comment: formData.expense.comment
         };
 
-        jQuery.getJSON('/current/add/' + formData.payer, expensePartial, function(reply) {
-            console.log(reply);
+        $.post('/api/add/expense', expensePartial, function(reply) {
             if (reply && reply.errors && reply.errors.length > 0) {
                 App.formAlertController.set('errors', reply.errors);
             } else if (reply && reply.ok) {
@@ -404,7 +403,7 @@ App.expenseFormController = Ember.Object.create({
             } else {
                 App.formAlertController.set('errors', ['Unknown response from server']);
             }
-        });
+        }, 'json');
     }
 });
 
@@ -478,7 +477,7 @@ App.loginController = Ember.Object.create({
             password: password
         };
 
-        $.post('/login', loginData, onPostComplete, 'json');
+        $.post('/api/session/login', loginData, onPostComplete, 'json');
 
         function onPostComplete (responseData) {
             if (responseData && responseData.ok) {
@@ -490,7 +489,7 @@ App.loginController = Ember.Object.create({
 
     logout: function () {
         var self = this;
-        $.getJSON('/logout', function (reply) {
+        $.getJSON('/api/session/logout', function (reply) {
             self.set('loggedIn', false);
         });
     },
@@ -708,7 +707,7 @@ $(document).ready(function() {
 });
 
 function getAllData () {
-    jQuery.getJSON('/current', function(reply) {
+    jQuery.getJSON('/api/userInfo', function(reply) {
         if (reply && reply.error) {
             App.formAlertController.set('errors', [reply.error && reply.error.description]);
             return;

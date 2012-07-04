@@ -7,6 +7,7 @@ var mySqlConnector = require('../lib/databaseConnectors/mySqlConnector');
 var authParser = require('../lib/middleWare/authParser');
 var credentialsValidator = require('../lib/middleWare/credentialsValidator');
 var configLoader = require('../lib/configLoader');
+var appRouter = require('../routes/appRouter');
 
 commander
     .version('0.0.1')
@@ -66,7 +67,7 @@ configLoader.load(function (err, config) {
     });
 
     // Routes
-    var routes = {
+    /*var routes = {
         main: require('./../routes/index'),
         current: require('./../routes/current').create(dbConnector),
         payout: require('./../routes/payout').create(dbConnector),
@@ -76,12 +77,15 @@ configLoader.load(function (err, config) {
     var requiresAuth = authParser();
     var requiresValidUser = credentialsValidator(dbConnector);
 
-    app.get('/', routes.main.index);
-    app.get('/current', requiresAuth, requiresValidUser, routes.current.index);
-    app.get('/current/add/:userName', requiresAuth, requiresValidUser, routes.current.add);
-    app.get('/payout', requiresAuth, requiresValidUser, routes.payout.add);
-    app.post('/login', routes.loginLogout.login);
-    app.get('/logout', requiresAuth, requiresValidUser, routes.loginLogout.logout);
+    app.get ('/', routes.main.index);
+    app.get ('/api/userInfo/all', requiresAuth, requiresValidUser, routes.current.index);
+
+    app.post('/api/add/expense', requiresAuth, requiresValidUser, routes.current.add);
+    app.post('/api/add/payout', requiresAuth, requiresValidUser, routes.payout.addExpense.bind(routes.payout));
+
+    app.post('/api/session/login', routes.loginLogout.login);
+    app.get ('/api/session/logout', requiresAuth, requiresValidUser, routes.loginLogout.logout);*/
+    appRouter.setupRoutes(app, {dbConnector: dbConnector});
 
     app.listen(config.server.port, function(){
         console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
