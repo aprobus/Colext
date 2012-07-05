@@ -639,6 +639,12 @@ App.pagerViews = Ember.Object.create({
     View for adding new payouts
  */
 App.payoutView = Ember.View.extend({
+    attributeBindings: ['disabled'],
+    disabled: function () {
+        var isLoggedIn = App.loginController.get('loggedIn');
+        return !isLoggedIn;
+    }.property('App.loginController.loggedIn'),
+
     click: function (event) {
         event.preventDefault();
         App.payoutController.addPayout();
