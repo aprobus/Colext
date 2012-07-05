@@ -505,8 +505,7 @@ App.loginController = Ember.Object.create({
             this.set('password', null);
             this.set('email', null);
             this.set('loggedInUser', null);
-            App.peopleController.set('content', []);
-            App.expensesController.set('content', []);
+            setFakeData();
         }
     }.observes('loggedIn')
 });
@@ -709,28 +708,107 @@ $(document).ready(function() {
 
     if (hasAuthorization && hasemail) {
         App.loginController.set('loggedIn', true);
+    } else {
+        setFakeData();
     }
 });
 
 function getAllData () {
     jQuery.getJSON('/api/userInfo', function(reply) {
-        if (reply && reply.error) {
-            App.formAlertController.set('errors', [reply.error && reply.error.description]);
-            return;
-        }
-
-        if (reply && reply.users) {
-            App.peopleController.setPeople(reply.users);
-        }
-
-        if (reply && reply.payouts) {
-            App.payoutController.set('payouts', reply.payouts);
-        }
-
-        if (reply && reply.expenses) {
-            App.expensesController.setExpenses(reply.expenses);
+        if (reply && reply.ok) {
+            setData(reply);
         }
     });
+}
+
+function setFakeData () {
+    var now = Math.floor(new Date().getTime() / 1000);
+    var beginTime = now - 604800;
+    var payoutTime = now - 302400;
+
+    var fakeData = {
+        users: [
+            {
+                firstName: 'Donald',
+                lastName: 'McFakerson',
+                email: 'don@fake.com'
+            }, {
+                firstName: 'Made',
+                lastName: 'Up',
+                email: 'made@fake.com'
+            }, {
+                firstName: 'Not',
+                lastName: 'Real',
+                email: 'not@fake.com'
+            }
+        ],
+        payouts: [payoutTime],
+        expenses: []
+    };
+
+    for (var i = 0; i < Math.floor(Math.random() * 10 + 5); i++) {
+        fakeData.expenses.push(getFakeExpense(beginTime, payoutTime));
+    }
+
+    for (i = 0; i < Math.floor(Math.random() * 10 + 5); i++) {
+        fakeData.expenses.push(getFakeExpense(payoutTime, now));
+    }
+
+    setData(fakeData);
+
+    function getFakeExpense (from, to) {
+        var fakeComments = [
+            'Gas bill',
+            'Electricity bill',
+            'Water bill',
+            'Cable bill',
+            'Phone bill',
+            'Groceries',
+            'Beer',
+            'Pizza'
+        ];
+
+
+        var delta = to - from;
+
+        var expense = {
+            email: fakeData.users[Math.floor(Math.random() * fakeData.users.length)].email,
+            amount: Math.random() * 80 + 1,
+            comment: fakeComments[Math.floor(Math.random() * fakeComments.length)],
+            timeStamp: Math.floor(Math.random() * delta + from)
+        };
+
+        return expense;
+    }
+}
+
+function setData (userData) {
+    if (!userData) {
+        return;
+    }
+
+    if (userData.error) {
+        App.formAlertController.set('errors', [userData.error && userData.error.description]);
+        return;
+    }
+
+    if (userData.users) {
+        App.peopleController.setPeople(userData.users);
+    } else {
+        App.peopleController.setPeople([]);
+    }
+
+    if (userData.payouts) {
+        App.payoutController.set('payouts', userData.payouts);
+    } else {
+        App.payoutController.set('payouts', []);
+    }
+
+    if (userData.expenses) {
+        App.expensesController.setExpenses(userData.expenses);
+    } else {
+        App.expensesController.setExpenses([]);
+    }
 }
 
 function drawGraph () {
