@@ -29,7 +29,7 @@
                         <script type="text/x-handlebars">
                             {{#if App.loginController.loggedIn }}
                                 <span>Welcome, {{App.loginController.loggedInUser.fullName}}</span>
-                                {{view App.loginControls.logoutView tagName="input" class="span2 btn btn-danger"}}
+                                {{view App.loginControls.logoutView tagName="input" class="btn"}}
                             {{else}}
                                 <span class="input-prepend">
                                     <span class="add-on"><i class="icon-envelope"></i></span>{{view App.loginControls.emailView class="span2"}}
