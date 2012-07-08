@@ -42,7 +42,6 @@
         </div>
     </div>
 
-
     <div class="span4">
         <script type="text/x-handlebars">
             {{#view App.summaryTableView class="table table-bordered" tagName="table"}}
@@ -119,18 +118,16 @@
                         <td>Date</td>
                         <td>Payer</td>
                         <td>Amount</td>
-                        <td>Comment</td>
                     </tr>
                 </thead>
 
                 <tbody>
                     {{#each content}}
-                        <tr>
-                            <td>{{timeStampString}}</td>
-                            <td>{{payerString}}</td>
-                            <td>${{amountString}}</td>
-                            <td>{{comment}}</td>
-                        </tr>
+                        {{#view App.expenseTableItem contentBinding="this" tagName="tr" class="what"}}
+                            <td>{{content.timeStampString}}</td>
+                            <td>{{content.payerString}}</td>
+                            <td>{{content.amountString}}</td>
+                        {{/view}}
                     {{/each}}
                 </tbody>
             {{/view}}

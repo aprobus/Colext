@@ -62,6 +62,7 @@ App.personModel = Ember.Object.extend({
 });
 
 App.expenseModel = Ember.Object.extend({
+    id: null,
     payer: null,
     timeStamp: null,
     amount: 0.0,
@@ -73,12 +74,18 @@ App.expenseModel = Ember.Object.extend({
         return shortDateFormat(momentDate);
     }.property('timeStamp'),
 
+    timeStampStringLong: function () {
+      var timeStamp = this.get('timeStamp');
+      var momentDate = moment.unix(timeStamp);
+      return longDateFormat(momentDate);
+    }.property('timeStamp'),
+
     payerString: function () {
         return this.get('payer').get('fullName');
     }.property('payer'),
 
     amountString: function () {
-        return this.get('amount').toFixed(2);
+        return '$' + this.get('amount').toFixed(2);
     }.property('amount')
 });
 
@@ -202,6 +209,7 @@ App.expensesController = Ember.ArrayController.create({
             payer = App.peopleController.get('content').findProperty('email', expenses[i].email);
 
             expense = App.expenseModel.create({
+                id: expenses[i].id,
                 payer: payer,
                 amount: expenses[i].amount,
                 comment: expenses[i].comment,
@@ -526,6 +534,34 @@ App.expenseTableView = Ember.View.extend({
     contentBinding: 'App.pageController.expensesForPage'
 });
 
+App.expenseTableItem = Ember.View.extend({
+  content: null, //To be filled in
+
+  mouseEnter: function (event) {
+    var content = this.get('content');
+    var thisObject = $("#" + event.currentTarget.id);
+
+    var title = 'Expense from ' + content.get('timeStampStringLong');
+    var popoverContent = '<table class="table">' +
+                         '<tr><td>Paid By:</td><td>' + content.get('payerString') + '</td>' +
+                         '<tr><td>Amount Paid:</td><td>' + content.get('amountString') + '</td>' +
+                         '<tr><td>Comment:</td><td>' + content.get('comment') + '</td></tr>' +
+                         '</table>';
+
+    thisObject.popover({
+      title: title,
+      content: popoverContent,
+      placement: 'left'
+    });
+
+    thisObject.popover('show');
+  },
+
+  mouseLeave: function (event) {
+    //console.log(event.target);
+  }
+});
+
 /*
     View of form to add expenses
  */
@@ -704,13 +740,19 @@ App.loginControls = Ember.Object.create({
 
 $(document).ready(function() {
     var hasAuthorization = Boolean($.cookie('authorization'));
-    var hasemail = Boolean($.cookie('email'));
+    var hasEmail = Boolean($.cookie('email'));
 
-    if (hasAuthorization && hasemail) {
+    if (hasAuthorization && hasEmail) {
         App.loginController.set('loggedIn', true);
     } else {
         setFakeData();
     }
+
+  $(".what").popover({
+    title: 'Title',
+    content: 'Content',
+    placement: 'left'
+  });
 });
 
 function getAllData () {
