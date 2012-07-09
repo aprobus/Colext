@@ -70,6 +70,7 @@
             </tbody>
             {{/view}}
         </script>
+
         <div id="expenseFormWrapper" style="margin-bottom:5px;">
             <div style="text-align:center; border-bottom:2px solid lightgray;"><h3>New Expense</h3></div>
 
@@ -129,7 +130,7 @@
                             <td>{{content.payerString}}</td>
                             <td>{{content.amountString}}</td>
                             <td>
-                                {{#if addedByUser }}
+                                {{#if canRemove }}
                                     <i {{action "remove" on="click"}} class="icon-trash"></i>
                                 {{/if}}
                             </td>

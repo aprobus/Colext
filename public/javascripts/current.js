@@ -91,6 +91,10 @@ App.timeSpanModel = Ember.Object.extend({
   from: null,
   to: null,
 
+  isCurrentTimeSpan: function () {
+    return this.get('to') === Number.POSITIVE_INFINITY;
+  }.property('to'),
+
   fromStringShort: function () {
     var from = this.get('from');
 
@@ -581,7 +585,7 @@ App.expenseTableItem = Ember.View.extend({
     var userEmail = user && user.get('email');
 
     return expensePayer === userEmail;
-  }.property(),
+  }.property('content.payer.email', 'App.currentUserController.user.email'),
 
   mouseEnter: function (event) {
     var content = this.get('content');
@@ -598,6 +602,15 @@ App.expenseTableItem = Ember.View.extend({
 
     thisObject.popover('show');
   },
+
+  canRemove: function () {
+    if (!this.get('addedByUser')) {
+      return false;
+    }
+
+    var timeSpan = App.timeSpanController.get('selectedOrDefault');
+    return timeSpan && timeSpan.get('isCurrentTimeSpan');
+  }.property('addedByUser', 'App.timeSpanController.selectedOrDefault.isCurrentTimeSpan'),
 
   remove: function () {
     var thisObject = $("#" + this.get('elementId'));
