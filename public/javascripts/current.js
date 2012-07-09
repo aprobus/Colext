@@ -158,18 +158,12 @@ App.peopleController = Ember.ArrayController.create({
     var people = [];
     var person = null;
 
-    var loggedInEmail = $.cookie('email');
-
     for (var i = 0; i < users.length; i++) {
       person = App.personModel.create({
         email: users[i].email,
         firstName: users[i].firstName,
         lastName: users[i].lastName
       });
-
-      if (users[i].email === loggedInEmail) {
-        App.loginController.set('loggedInUser', person);
-      }
 
       people.push(person);
     }
@@ -485,17 +479,26 @@ App.pageController = Ember.Object.create({
   }.property('currentPage', 'App.displayableExpensesController.expensesForPayout.@each')
 });
 
-App.loginController = Ember.Object.create({
-  email: null,
-  password: null,
-  loggedInUser: null, //TODO: Should probably separate this from the login from controller
-  loggedIn: false,
+App.currentUserController = Ember.Object.create({
+  user: null,
 
-  login: function () {
+  loggedIn: function () {
+    var user = this.get('user');
+    return Boolean(user);
+  }.property('user'),
+
+  onLoggedInChanged: function () {
+    var loggedIn = this.get('loggedIn');
+
+    if (!loggedIn) {
+      $.cookie('authorization', null);
+      $.cookie('email', null);
+      setFakeData();
+    }
+  }.observes('loggedIn'),
+
+  login: function (email, password, callback) {
     var self = this;
-    var email = this.get('email');
-    var password = this.get('password');
-
     var loginData = {
       email: email,
       password: password
@@ -504,34 +507,52 @@ App.loginController = Ember.Object.create({
     $.post('/api/session/login', loginData, onPostComplete, 'json');
 
     function onPostComplete (responseData) {
-      if (responseData && responseData.ok) {
-        self.set('loggedIn', true);
-        self.set('password', null);
+      if (responseData && responseData.error) {
+        callback(responseData.error);
+      } else if (responseData && responseData.ok) {
+        getAllData(function (err) {
+          if (!err) {
+            var currUser = App.peopleController.findProperty('email', $.cookie('email'));
+            self.set('user', currUser);
+          }
+
+          callback(err);
+        });
       }
     }
   },
 
   logout: function () {
     var self = this;
+
     $.getJSON('/api/session/logout', function (reply) {
-      self.set('loggedIn', false);
+      self.set('user', null);
+    });
+  }
+});
+
+App.loginFormController = Ember.Object.create({
+  email: null,
+  password: null,
+
+  login: function () {
+    var self = this;
+    var email = this.get('email');
+    var password = this.get('password');
+
+    App.currentUserController.login(email, password, function (err) {
+      if (!err) {
+        self.set('email', null);
+        self.set('password', null);
+      } else {
+        console.log(err); //TODO: Notification of some sort
+      }
     });
   },
 
-  loggedInChanged: function () {
-    var loggedIn = this.get('loggedIn');
-
-    if (loggedIn) {
-      this.set('email', $.cookie('email'));
-      getAllData();
-    } else {
-      $.cookie('authorization', null);
-      this.set('password', null);
-      this.set('email', null);
-      this.set('loggedInUser', null);
-      setFakeData();
-    }
-  }.observes('loggedIn')
+  logout: function () {
+    App.currentUserController.logout();
+  }
 });
 
 //------------------------------- Views -------------------------------
@@ -555,7 +576,9 @@ App.expenseTableItem = Ember.View.extend({
 
   addedByUser: function () {
     var expensePayer = this.get('content').get('payer').get('email');
-    var userEmail = App.loginController.get('email');
+    var user = App.currentUserController.get('user');
+
+    var userEmail = user && user.get('email');
 
     return expensePayer === userEmail;
   }.property(),
@@ -626,8 +649,8 @@ App.expenseFormControls = Ember.Object.create({
     value: 'Submit',
     type: 'submit',
     hide: function () {
-      return !App.loginController.get('loggedIn');
-    }.property('App.loginController.loggedIn'),
+      return !App.currentUserController.get('loggedIn');
+    }.property('App.currentUserController.loggedIn'),
 
     click: function (event) {
       event.preventDefault();
@@ -697,9 +720,9 @@ App.pagerViews = Ember.Object.create({
 App.payoutView = Ember.View.extend({
   attributeBindings: ['disabled'],
   disabled: function () {
-    var isLoggedIn = App.loginController.get('loggedIn');
+    var isLoggedIn = App.currentUserController.get('loggedIn');
     return !isLoggedIn;
-  }.property('App.loginController.loggedIn'),
+  }.property('App.currentUserController.loggedIn'),
 
   click: function (event) {
     event.preventDefault();
@@ -723,7 +746,7 @@ App.loginControls = Ember.Object.create({
     attributeBindings: ['placeholder'],
     placeholder: 'user@example.com',
 
-    valueBinding: 'App.loginController.email'
+    valueBinding: 'App.loginFormController.email'
   }),
 
   passwordView: Ember.TextField.extend({
@@ -731,7 +754,7 @@ App.loginControls = Ember.Object.create({
     placeholder: 'Password',
 
     type: 'password',
-    valueBinding: 'App.loginController.password'
+    valueBinding: 'App.loginFormController.password'
   }),
 
   submitView: Ember.View.extend({
@@ -741,7 +764,7 @@ App.loginControls = Ember.Object.create({
 
     click: function (event) {
       event.preventDefault();
-      App.loginController.login();
+      App.loginFormController.login();
     }
   }),
 
@@ -752,7 +775,7 @@ App.loginControls = Ember.Object.create({
 
     click: function (event) {
       event.preventDefault();
-      App.loginController.logout();
+      App.loginFormController.logout();
     }
   })
 });
@@ -764,16 +787,26 @@ $(document).ready(function () {
   var hasEmail = Boolean($.cookie('email'));
 
   if (hasAuthorization && hasEmail) {
-    App.loginController.set('loggedIn', true);
+    getAllData(function (err) {
+      if (!err) {
+        var currUser = App.peopleController.findProperty('email', $.cookie('email'));
+        App.currentUserController.set('user', currUser);
+      } else {
+        setFakeData();
+      }
+    });
   } else {
     setFakeData();
   }
 });
 
-function getAllData () {
+function getAllData (callback) {
   jQuery.getJSON('/api/userInfo', function (reply) {
     if (reply && reply.ok) {
       setData(reply);
+      callback();
+    } else {
+      callback('Unable to get data');
     }
   });
 }

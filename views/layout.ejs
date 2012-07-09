@@ -27,8 +27,8 @@
 
                     <form class="navbar-form pull-right">
                         <script type="text/x-handlebars">
-                            {{#if App.loginController.loggedIn }}
-                                <span>Welcome, {{App.loginController.loggedInUser.fullName}}</span>
+                            {{#if App.currentUserController.loggedIn }}
+                                <span>Welcome, {{App.currentUserController.user.fullName}}</span>
                                 {{view App.loginControls.logoutView tagName="input" class="btn"}}
                             {{else}}
                                 <span class="input-prepend">
