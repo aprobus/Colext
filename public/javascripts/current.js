@@ -185,10 +185,11 @@ App.peopleController = Ember.ArrayController.create({
 App.expensesController = Ember.ArrayController.create({
   content: [],
 
-  addExpense: function (email, amount, comment, timeStamp) {
+  addExpense: function (id, email, amount, comment, timeStamp) {
     var payer = App.peopleController.get('content').findProperty('email', email);
 
     var expense = App.expenseModel.create({
+      id: id,
       payer: payer,
       amount: amount,
       comment: comment,
@@ -196,6 +197,23 @@ App.expensesController = Ember.ArrayController.create({
     });
 
     this.get('content').pushObject(expense);
+  },
+
+  //TODO: Ajax calls for adding/removing expenses should not be in different locations
+  removeExpense: function (id) {
+    var content = this.get('content');
+    var updatedExpenses = content.filter(function (item) {
+      return item.id !== id;
+    });
+
+    var self = this;
+    $.post('/api/remove/expense', {expenseId: id}, function (response) {
+      if (response && response.ok) {
+        self.set('content', updatedExpenses);
+      } else {
+        console.log(response); //TODO: Some type of error notification to the user
+      }
+    }, 'json');
   },
 
   setExpenses: function (expenses) {
@@ -404,7 +422,7 @@ App.expenseFormController = Ember.Object.create({
         App.formAlertController.set('errors', reply.errors);
       } else if (reply && reply.ok) {
         App.formAlertController.set('errors', null);
-        App.expensesController.addExpense(formData.payer, expensePartial.amount, expensePartial.comment);
+        App.expensesController.addExpense(reply.insertId, formData.payer, expensePartial.amount, expensePartial.comment);
         App.expenseFormController.reset();
       } else {
         App.formAlertController.set('errors', ['Unknown response from server']);
@@ -535,9 +553,16 @@ App.expenseTableView = Ember.View.extend({
 App.expenseTableItem = Ember.View.extend({
   content: null, //To be filled in
 
+  addedByUser: function () {
+    var expensePayer = this.get('content').get('payer').get('email');
+    var userEmail = App.loginController.get('email');
+
+    return expensePayer === userEmail;
+  }.property(),
+
   mouseEnter: function (event) {
     var content = this.get('content');
-    var thisObject = $("#" + event.currentTarget.id);
+    var thisObject = $("#" + this.get('elementId'));
 
     var title = 'Expense from ' + content.get('timeStampStringLong');
     var popoverContent = '<table class="table">' + '<tr><td>Paid By:</td><td>' + content.get('payerString') + '</td>' + '<tr><td>Amount:</td><td>' + content.get('amountString') + '</td>' + '<tr><td>Comment:</td><td>' + content.get('comment') + '</td></tr>' + '</table>';
@@ -549,6 +574,12 @@ App.expenseTableItem = Ember.View.extend({
     });
 
     thisObject.popover('show');
+  },
+
+  remove: function () {
+    var thisObject = $("#" + this.get('elementId'));
+    thisObject.popover('hide');
+    App.expensesController.removeExpense(this.get('content').id);
   }
 });
 
@@ -737,12 +768,6 @@ $(document).ready(function () {
   } else {
     setFakeData();
   }
-
-  $(".what").popover({
-    title: 'Title',
-    content: 'Content',
-    placement: 'left'
-  });
 });
 
 function getAllData () {

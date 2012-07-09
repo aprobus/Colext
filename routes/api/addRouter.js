@@ -12,11 +12,11 @@ AddRouter.prototype.addExpense = function (req, res) {
     return;
   }
 
-  this.dbConnector.addExpense(req.authorization.user, expense.amount, expense.comment, function (err) {
+  this.dbConnector.addExpense(req.authorization.user, expense.amount, expense.comment, function (err, insertId) {
     if (err) {
       res.json({ok: false, error: err});
     } else {
-      res.json({ok: true});
+      res.json({ok: true, insertId: insertId});
     }
   });
 };

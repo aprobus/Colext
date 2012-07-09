@@ -118,15 +118,21 @@
                         <td>Date</td>
                         <td>Payer</td>
                         <td>Amount</td>
+                        <td></td>
                     </tr>
                 </thead>
 
                 <tbody>
                     {{#each content}}
-                        {{#view App.expenseTableItem contentBinding="this" tagName="tr" class="what"}}
+                        {{#view App.expenseTableItem contentBinding="this" tagName="tr"}}
                             <td>{{content.timeStampString}}</td>
                             <td>{{content.payerString}}</td>
                             <td>{{content.amountString}}</td>
+                            <td>
+                                {{#if addedByUser }}
+                                    <i {{action "remove" on="click"}} class="icon-trash"></i>
+                                {{/if}}
+                            </td>
                         {{/view}}
                     {{/each}}
                 </tbody>
