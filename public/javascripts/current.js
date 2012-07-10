@@ -793,6 +793,16 @@ App.loginControls = Ember.Object.create({
   })
 });
 
+App.showCurrentTimeSpanView = Ember.View.extend({
+  attributeBindings: ['href'],
+  href: '#',
+
+  click: function (event) {
+    event.preventDefault();
+    App.timeSpanController.setSelectedToNewest();
+  }
+});
+
 //------------------------------- Other -------------------------------
 
 $(document).ready(function () {

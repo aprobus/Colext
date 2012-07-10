@@ -1,13 +1,13 @@
 <div class="row">
-    <div class="span4 offset4" style="text-align:center;">
+    <div class="span4 offset4 centerText">
         <h1>Expenses</h1>
     </div>
 </div>
 
-<div class="row" style="margin-bottom:5px;">
+<div class="row bottomMargin">
     <div class="span4 offset4">
         <script type="text/x-handlebars">
-            <div class="btn-group" style="display:table;margin-left:auto;margin-right:auto;">
+            <div class="btn-group centered">
                 <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
                     {{App.timeSpanController.selectedOrDefault.fromStringLong}} - {{App.timeSpanController.selectedOrDefault.toStringLong}}
                     <span class="caret"></span>
@@ -35,10 +35,10 @@
     </div>
 </div>
 
-<div class="row" style="margin-bottom:10px">
+<div class="row">
 
-    <div class="span4" style="text-align:center;">
-        <div id="expenseGraphContainer" style="height:400px;width:100%;">
+    <div class="span4 centerText">
+        <div id="expenseGraphContainer">
         </div>
     </div>
 
@@ -71,45 +71,53 @@
             {{/view}}
 
             {{#if App.timeSpanController.selectedOrDefault.isCurrentTimeSpan}}
-                <div id="expenseFormWrapper" style="margin-bottom:5px;">
-                    <div style="text-align:center; border-bottom:2px solid lightgray;"><h3>New Expense</h3></div>
+                <div id="expenseFormWrapper" class="bottomMargin">
+                    <div class="centerText bottomDivider">
+                        <h3>New Expense</h3>
+                    </div>
 
                         {{#view App.expenseFormView class="form-vertical" tagName="form"}}
                             <label class="control-label" for="formAmount">Amount:</label>
 
                             <div class="input-prepend">
-                                <span class="add-on">$</span>{{view App.expenseFormControls.amountView id="formAmount" }}
+                                <span class="add-on">$</span>{{view App.expenseFormControls.amountView class="input-mini" }}
                             </div>
 
                             <label class="control-label" for="formComment">Comment:</label>
                             {{view App.expenseFormControls.commentView id="formComment" }}
 
-                            <div style="text-align:center;">
+                            <div class="centerText">
                                 {{view App.expenseFormControls.submitView tagName="input" class="btn btn-primary" }}
                                 {{view App.expenseFormControls.cancelView tagName="input" class="btn" }}
                             </div>
                         {{/view}}
 
                         {{#view App.formAlertView class="alert alert-error"}}
-                        Unable to submit expense:
-                        <ul>
-                            {{#each errors}}
-                            <li>{{ this }}</li>
-                            {{/each}}
-                        </ul>
+                            Unable to submit expense:
+                            <ul>
+                                {{#each errors}}
+                                <li>{{ this }}</li>
+                                {{/each}}
+                            </ul>
                         {{/view}}
                 </div>
 
-                <div style="text-align:center;">
+                <div class="centerText">
                     {{#view App.payoutView tagName="button" class="btn btn-large btn-danger"}}Payout{{/view}}
                 </div>
             {{else}}
-                <div style="text-align:center;" class="alert alert-info">Expenses can only be added to current payout</div>
+                <div class="alert alert-warning centerText">
+                    <span>Expenses can only be added to the current payout</span>
+                    <br/>
+                    {{#view App.showCurrentTimeSpanView tagName="a" }}
+                        To add more expenses, click here
+                    {{/view}}
+                </div>
             {{/if}}
         </div>
     </script>
 
-    <div class="span4" style="text-align:center;">
+    <div class="span4 centerText">
         <script type="text/x-handlebars">
             {{#view App.expenseTableView class="table table-striped" tagName="table"}}
                 <thead>

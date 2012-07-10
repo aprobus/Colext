@@ -1,11 +1,3 @@
-#formPayer {
-    width: 40%;
-}
-
-#formAmount {
-    width: 18%;
-}
-
 #formComment {
     width: 90%;
 }
@@ -18,5 +10,33 @@
 }
 
 #passwordView {
+    margin-bottom: 5px;
+}
+
+.brandHighlight {
+    color: yellow;
+}
+
+.centerText {
+    text-align: center;
+}
+
+div.centered {
+    display: table;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#expenseGraphContainer {
+    height: 400px;
+    width: 100%;
+}
+
+.bottomMargin {
+    margin-bottom: 5px;
+}
+
+.bottomDivider {
+    border-bottom: 2px solid #FFFFFF;
     margin-bottom: 5px;
 }
