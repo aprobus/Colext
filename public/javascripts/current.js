@@ -15,7 +15,7 @@ App.personModel = Ember.Object.extend({
   }.property('firstName', 'lastName'),
 
   expensesForPayout: function () {
-    var expenses = App.displayableExpensesController.get('expensesForPayout');
+    var expenses = App.timeSpanController.get('selectedOrDefault').get('expenses');
     var email = this.get('email');
 
     var userExpenses = expenses.filter(function (expense) {
@@ -23,7 +23,7 @@ App.personModel = Ember.Object.extend({
     });
 
     return userExpenses;
-  }.property('App.displayableExpensesController.expensesForPayout.@each'),
+  }.property('App.timeSpanController.selectedOrDefault.expenses.@each'),
 
   paidForPayout: function () {
     var totalExpenses = 0.0;
@@ -40,14 +40,14 @@ App.personModel = Ember.Object.extend({
   }.property('paidForPayout'),
 
   oweForPayout: function () {
-    var totalPaid = App.displayableExpensesController.get('totalPaid');
+    var totalPaid = App.timeSpanController.get('selectedOrDefault').get('totalPaid');
     var numPeople = App.peopleController.get('numPeople');
     var individualShare = totalPaid / numPeople;
 
     var userPaid = this.get('paidForPayout');
 
     return userPaid - individualShare;
-  }.property('App.displayableExpensesController.totalPaid', 'App.peopleController.numPeople', 'paidForPayout'),
+  }.property('App.timeSpanController.selectedOrDefault.totalPaid', 'App.peopleController.numPeople', 'paidForPayout'),
 
   absOweForPayoutString: function () {
     var owedString = Math.abs(this.get('oweForPayout')).toFixed(2);
@@ -88,8 +88,46 @@ App.expenseModel = Ember.Object.extend({
 });
 
 App.timeSpanModel = Ember.Object.extend({
-  from: null,
-  to: null,
+  from: Number.NEGATIVE_INFINITY,
+  to: Number.POSITIVE_INFINITY,
+
+  expenses: function () {
+    var startTime = this.get('from');
+    var endTime = this.get('to');
+
+    var allExpenses = App.expensesController.get('content');
+
+    var payoutExpenses = allExpenses.filter(function (expense) {
+      var timeStamp = expense.get('timeStamp');
+      return (timeStamp > startTime) && (timeStamp < endTime);
+    });
+
+    var sortedExpenses = payoutExpenses.sort(function (expense1, expense2) {
+      var timeStamp1 = expense1.get('timeStamp');
+      var timeStamp2 = expense2.get('timeStamp');
+
+      if (timeStamp1 > timeStamp2) {
+        return -1;
+      } else if (timeStamp1 < timeStamp2) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+
+    return sortedExpenses;
+  }.property('App.expensesController.@each', 'from', 'to'),
+
+  totalPaid: function () {
+    var expenses = this.get('expenses');
+    var total = 0.0;
+
+    for (var i = 0; i < expenses.length; i++) {
+      total += expenses[i].get('amount')
+    }
+
+    return total;
+  }.property('expenses.@each.amount'),
 
   isCurrentTimeSpan: function () {
     return this.get('to') === Number.POSITIVE_INFINITY;
@@ -303,50 +341,9 @@ App.timeSpanController = Ember.Object.create({
   setSelectedToNewest: function () {
     var timeSpans = this.get('timeSpans');
     this.set('selectedTimeSpan', timeSpans[0]);
-  }
-});
+  },
 
-App.displayableExpensesController = Ember.Object.create({
-  expensesForPayout: function () {
-    var timeSpan = App.timeSpanController.get('selectedOrDefault');
-    var startTime = timeSpan.get('from');
-    var endTime = timeSpan.get('to');
-
-    var allExpenses = App.expensesController.get('content');
-
-    var payoutExpenses = allExpenses.filter(function (expense) {
-      var timeStamp = expense.get('timeStamp');
-      return (timeStamp > startTime) && (timeStamp < endTime);
-    });
-
-    var sortedExpenses = payoutExpenses.sort(function (expense1, expense2) {
-      var timeStamp1 = expense1.get('timeStamp');
-      var timeStamp2 = expense2.get('timeStamp');
-
-      if (timeStamp1 > timeStamp2) {
-        return -1;
-      } else if (timeStamp1 < timeStamp2) {
-        return 1;
-      } else {
-        return 0;
-      }
-    });
-
-    return sortedExpenses;
-  }.property('App.expensesController.@each', 'App.timeSpanController.selectedOrDefault'),
-
-  totalPaid: function () {
-    var expenses = this.get('expensesForPayout');
-    var total = 0.0;
-
-    for (var i = 0; i < expenses.length; i++) {
-      total += expenses[i].get('amount')
-    }
-
-    return total;
-  }.property('expensesForPayout.@each.amount'),
-
-  onExpensesForPayoutChanged: drawGraph.observes('expensesForPayout.@each')
+  onSelectedTimeSpanChanged: drawGraph.observes('selectedOrDefault.expenses.@each.amount')
 });
 
 /*
@@ -444,11 +441,11 @@ App.pageController = Ember.Object.create({
 
   hasOlderPage: function () {
     var currentPage = this.get('currentPage');
-    var expenses = App.displayableExpensesController.get('expensesForPayout').length;
+    var expenses = App.timeSpanController.get('selectedOrDefault').get('expenses').length;
     var totalPages = Math.ceil(expenses / 10.0);
 
     return (currentPage + 1) < totalPages;
-  }.property('App.displayableExpensesController.expensesForPayout.@each', 'currentPage'),
+  }.property('App.timeSpanController.selectedOrDefault.expenses.@each', 'currentPage'),
 
   hasNewerPage: function () {
     var currentPage = this.get('currentPage');
@@ -472,7 +469,7 @@ App.pageController = Ember.Object.create({
 
   expensesForPage: function () {
     var currentPage = this.get('currentPage');
-    var expenses = App.displayableExpensesController.get('expensesForPayout');
+    var expenses = App.timeSpanController.get('selectedOrDefault').get('expenses');
     var maxIndex = currentPage * 10 + 10;
 
     if (maxIndex > expenses.length) {
@@ -480,7 +477,7 @@ App.pageController = Ember.Object.create({
     }
 
     return expenses.slice(currentPage * 10, maxIndex);
-  }.property('currentPage', 'App.displayableExpensesController.expensesForPayout.@each')
+  }.property('currentPage', 'App.timeSpanController.selectedOrDefault.expenses.@each')
 });
 
 App.currentUserController = Ember.Object.create({
