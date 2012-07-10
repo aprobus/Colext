@@ -42,74 +42,72 @@
         </div>
     </div>
 
-    <div class="span4">
-        <script type="text/x-handlebars">
+    <script type="text/x-handlebars">
+        <div class="span4">
             {{#view App.summaryTableView class="table table-bordered" tagName="table"}}
-            <thead>
-                <tr>
-                    <td></td>
-                    <td>Paid</td>
-                    <td>Payout</td>
-                </tr>
-            </thead>
-
-            <tbody>
-                {{#each people}}
+                <thead>
                     <tr>
-                        <td>{{fullName}}</td>
-                        <td>${{paidForPayoutString}}</td>
-                        <td>
-                            {{#if inDebtForPayout}}
-                                <span class="label label-important">${{absOweForPayoutString}}</span>
-                            {{else}}
-                                <span class="label label-success">${{absOweForPayoutString}}</span>
-                            {{/if}}
-                        </td>
+                        <td></td>
+                        <td>Paid</td>
+                        <td>Payout</td>
                     </tr>
-                {{/each}}
-            </tbody>
-            {{/view}}
-        </script>
+                </thead>
 
-        <div id="expenseFormWrapper" style="margin-bottom:5px;">
-            <div style="text-align:center; border-bottom:2px solid lightgray;"><h3>New Expense</h3></div>
-
-            <script type="text/x-handlebars">
-                {{#view App.expenseFormView class="form-vertical" tagName="form"}}
-                    <label class="control-label" for="formAmount">Amount:</label>
-
-                    <div class="input-prepend">
-                        <span class="add-on">$</span>{{view App.expenseFormControls.amountView id="formAmount" }}
-                    </div>
-
-                    <label class="control-label" for="formComment">Comment:</label>
-                    {{view App.expenseFormControls.commentView id="formComment" }}
-
-                    <div style="text-align:center;">
-                        {{view App.expenseFormControls.submitView tagName="input" class="btn btn-primary" }}
-                        {{view App.expenseFormControls.cancelView tagName="input" class="btn" }}
-                    </div>
-                {{/view}}
-            </script>
-
-            <script type="text/x-handlebars">
-                {{#view App.formAlertView class="alert alert-error"}}
-                Unable to submit expense:
-                <ul>
-                    {{#each errors}}
-                    <li>{{ this }}</li>
+                <tbody>
+                    {{#each people}}
+                        <tr>
+                            <td>{{fullName}}</td>
+                            <td>${{paidForPayoutString}}</td>
+                            <td>
+                                {{#if inDebtForPayout}}
+                                    <span class="label label-important">${{absOweForPayoutString}}</span>
+                                {{else}}
+                                    <span class="label label-success">${{absOweForPayoutString}}</span>
+                                {{/if}}
+                            </td>
+                        </tr>
                     {{/each}}
-                </ul>
-                {{/view}}
-            </script>
-        </div>
+                </tbody>
+            {{/view}}
 
-        <div style="text-align:center;">
-            <script type="text/x-handlebars">
-                {{#view App.payoutView tagName="button" class="btn btn-large btn-danger"}}Payout{{/view}}
-            </script>
+            {{#if App.timeSpanController.selectedOrDefault.isCurrentTimeSpan}}
+                <div id="expenseFormWrapper" style="margin-bottom:5px;">
+                    <div style="text-align:center; border-bottom:2px solid lightgray;"><h3>New Expense</h3></div>
+
+                        {{#view App.expenseFormView class="form-vertical" tagName="form"}}
+                            <label class="control-label" for="formAmount">Amount:</label>
+
+                            <div class="input-prepend">
+                                <span class="add-on">$</span>{{view App.expenseFormControls.amountView id="formAmount" }}
+                            </div>
+
+                            <label class="control-label" for="formComment">Comment:</label>
+                            {{view App.expenseFormControls.commentView id="formComment" }}
+
+                            <div style="text-align:center;">
+                                {{view App.expenseFormControls.submitView tagName="input" class="btn btn-primary" }}
+                                {{view App.expenseFormControls.cancelView tagName="input" class="btn" }}
+                            </div>
+                        {{/view}}
+
+                        {{#view App.formAlertView class="alert alert-error"}}
+                        Unable to submit expense:
+                        <ul>
+                            {{#each errors}}
+                            <li>{{ this }}</li>
+                            {{/each}}
+                        </ul>
+                        {{/view}}
+                </div>
+
+                <div style="text-align:center;">
+                    {{#view App.payoutView tagName="button" class="btn btn-large btn-danger"}}Payout{{/view}}
+                </div>
+            {{else}}
+                <div style="text-align:center;" class="alert alert-info">Expenses can only be added to current payout</div>
+            {{/if}}
         </div>
-    </div>
+    </script>
 
     <div class="span4" style="text-align:center;">
         <script type="text/x-handlebars">
