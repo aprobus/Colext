@@ -5,32 +5,9 @@
 </div>
 
 <div class="row bottomMargin">
-    <div class="span4 offset4">
+    <div class="span4 offset4 centerText">
         <script type="text/x-handlebars">
-            <div class="btn-group centered">
-                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                    {{App.timeSpanController.selectedOrDefault.fromStringLong}} - {{App.timeSpanController.selectedOrDefault.toStringLong}}
-                    <span class="caret"></span>
-                </a>
-                <table class="table dropdown-menu">
-                    <thead>
-                        <tr>
-                            <td>From</td>
-                            <td>To</td>
-                            <td></td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each App.timeSpanController.timeSpans }}
-                            {{#view App.timeSpanView contentBinding="this" tagName="tr" }}
-                                <td>{{content.fromStringLong}}</td>
-                                <td>{{content.toStringLong}}</td>
-                                <td><button {{action "select" on="click"}} class="btn btn-primary">Select</button></td>
-                            {{/view}}
-                        {{/each}}
-                    </tbody>
-                </table>
-            </div>
+            <a class="btn" data-toggle="modal" href="#timeSpanModal">{{App.timeSpanController.selectedOrDefault.fullQualifier}}</a>
         </script>
     </div>
 </div>
@@ -157,5 +134,29 @@
                 {{/view}}
             </script>
         </ul>
+    </div>
+</div>
+
+<div id="timeSpanModal" class="modal hide">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">×</button>
+        <h3>Choose a payout period</h3>
+    </div>
+
+    <div class="modal-body">
+        <script type="text/x-handlebars">
+        {{#each App.timeSpanController.timeSpans }}
+            {{#view App.miniTimeSpanView contentBinding="this" tagName="div" class="miniTimeSpan" }}
+                <div class="centerText miniTimeSpanHeader">
+                    {{content.fullQualifier}}<br/>
+                </div>
+
+                <div style="margin-top:20px;margin-left:2px;">
+                    <span style="font-size:150%;">Total Paid:</span><br/>
+                    <span style="font-size:200%;">${{content.totalPaidString}}</span>
+                </div>
+            {{/view}}
+        {{/each}}
+        </script>
     </div>
 </div>

@@ -129,6 +129,11 @@ App.timeSpanModel = Ember.Object.extend({
     return total;
   }.property('expenses.@each.amount'),
 
+  totalPaidString: function () {
+    var totalPaid = this.get('totalPaid');
+    return totalPaid.toFixed(2);
+  }.property('totalPaid'),
+
   isCurrentTimeSpan: function () {
     return this.get('to') === Number.POSITIVE_INFINITY;
   }.property('to'),
@@ -175,7 +180,22 @@ App.timeSpanModel = Ember.Object.extend({
 
     var toDate = moment.unix(to);
     return longDateFormat(toDate);
-  }.property('to')
+  }.property('to'),
+
+  fullQualifier: function () {
+    var from = this.get('from');
+    var to = this.get('to');
+
+    if (from === Number.NEGATIVE_INFINITY && to === Number.POSITIVE_INFINITY) {
+      return 'All Expenses';
+    } else if (from === Number.NEGATIVE_INFINITY) {
+      return 'Expenses up to ' + this.get('toStringLong');
+    } else if (to === Number.POSITIVE_INFINITY) {
+      return 'Expenses after ' + this.get('fromStringLong');
+    } else {
+      return 'Expenses from ' + this.get('fromStringLong') + ' to ' + this.get('toStringLong');
+    }
+  }.property('from, to')
 });
 
 //------------------------------- Controllers -------------------------------
@@ -303,7 +323,7 @@ App.timeSpanController = Ember.Object.create({
       var timeSpans = this.get('timeSpans');
       return timeSpans[0];
     }
-  }.property('selectedTimeSpan', 'timeSpans'),
+  }.property('selectedTimeSpan', 'timeSpans.@each'),
 
   timeSpans: function () {
     var payouts = App.payoutController.get('payouts').sort();
@@ -342,6 +362,10 @@ App.timeSpanController = Ember.Object.create({
     var timeSpans = this.get('timeSpans');
     this.set('selectedTimeSpan', timeSpans[0]);
   },
+
+  onNewPayouts: function () {
+    this.set('selectedTimeSpan', null);
+  }.observes('timeSpans.@each'),
 
   onSelectedTimeSpanChanged: drawGraph.observes('selectedOrDefault.expenses.@each.amount')
 });
@@ -740,17 +764,6 @@ App.payoutView = Ember.View.extend({
   }
 });
 
-App.timeSpanView = Ember.View.extend({
-  content: null, //To be set to a timeSpan
-
-  select: function () {
-    var timeSpan = this.get('content');
-    var from = timeSpan.get('from') || Number.NEGATIVE_INFINITY;
-    //App.payoutController.setPayout(from);
-    App.timeSpanController.set('selectedTimeSpan', timeSpan);
-  }
-});
-
 App.loginControls = Ember.Object.create({
   emailView: Ember.TextField.extend({
     attributeBindings: ['placeholder'],
@@ -800,6 +813,19 @@ App.showCurrentTimeSpanView = Ember.View.extend({
   }
 });
 
+App.miniTimeSpanView = Ember.View.extend({
+  content: null, //To be set in view
+
+  click: function (event) {
+    event.preventDefault();
+    var timeSpan = this.get('content');
+    var from = timeSpan.get('from') || Number.NEGATIVE_INFINITY;
+    App.timeSpanController.set('selectedTimeSpan', timeSpan);
+
+    $('#timeSpanModal').modal('hide');
+  }
+});
+
 //------------------------------- Other -------------------------------
 
 $(document).ready(function () {
@@ -818,6 +844,10 @@ $(document).ready(function () {
   } else {
     setFakeData();
   }
+
+  $('#timeSpanModal').modal({
+    show: false
+  });
 });
 
 function getAllData (callback) {
@@ -919,12 +949,24 @@ function drawGraph () {
   var people = App.peopleController.get('content');
   var container = document.getElementById("expenseGraphContainer");
 
-  var expensesPerPerson = people.map(function (person, index) {
-    var totalExpenses = person.get('paidForPayout');
+  var colors = [];
 
-    return [
-      [index, totalExpenses]
-    ];
+  var min = 0;
+  var max = 0;
+
+  var expensesPerPerson = people.map(function (person, index) {
+    var owe = person.get('oweForPayout');
+
+    if (owe >= 0) {
+      colors.push('#20BA0B');
+    } else {
+      colors.push('#FF0000');
+    }
+
+    min = Math.min(min, owe);
+    max = Math.max(max, owe);
+
+    return [[index, owe]];
   });
 
   var options = {
@@ -934,22 +976,39 @@ function drawGraph () {
       barWidth: .5
     },
 
+    colors: colors,
+
     xaxis: {
-      tickFormatter: formatXAxis
+      tickFormatter: formatXAxis,
+      min: -.5,
+      max: people.length -.5
     },
 
     yaxis: {
-      min: 0
+      min: min * 1.1,
+      max: max * 1.1
     }
   };
 
-  var graph = Flotr.draw(container, expensesPerPerson, options);
+  var horiLine = {
+    data : [[-10, 0], [10, 0]],
+    lines: {
+      show: true
+    },
+    shadowSize : 0,
+    color : '#545454'
+  };
+
+  expensesPerPerson.push(horiLine);
+
+  Flotr.draw(container, expensesPerPerson, options);
 
   function formatXAxis (x) {
     var index = parseFloat(x);
 
     if (index % 1 === 0) {
-      return people[index].get('fullName');
+      var person = people[index];
+      return Boolean(person) ? person.get('fullName') : '';
     } else {
       return '';
     }
