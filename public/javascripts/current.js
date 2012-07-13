@@ -134,7 +134,7 @@ App.timeSpanModel = Ember.Object.extend({
     return totalPaid.toFixed(2);
   }.property('totalPaid'),
 
-  isCurrentTimeSpan: function () {
+  isMostRecentTimeSpan: function () {
     return this.get('to') === Number.POSITIVE_INFINITY;
   }.property('to'),
 
@@ -189,13 +189,24 @@ App.timeSpanModel = Ember.Object.extend({
     if (from === Number.NEGATIVE_INFINITY && to === Number.POSITIVE_INFINITY) {
       return 'All Expenses';
     } else if (from === Number.NEGATIVE_INFINITY) {
-      return 'Expenses up to ' + this.get('toStringLong');
+      return 'Up to ' + this.get('toStringLong');
     } else if (to === Number.POSITIVE_INFINITY) {
-      return 'Expenses after ' + this.get('fromStringLong');
+      return 'After ' + this.get('fromStringLong');
     } else {
-      return 'Expenses from ' + this.get('fromStringLong') + ' to ' + this.get('toStringLong');
+      return 'From ' + this.get('fromStringLong') + ' to ' + this.get('toStringLong');
     }
-  }.property('from, to')
+  }.property('from, to'),
+
+  avgExpenseString: function () {
+    var total = this.get('totalPaid');
+    var numExpenses = this.get('expenses').length;
+
+    if (numExpenses === 0) {
+      return '$0.00';
+    } else {
+      return '$' + (total / numExpenses).toFixed(2);
+    }
+  }.property('totalPaid', 'expenses.@each')
 });
 
 //------------------------------- Controllers -------------------------------
@@ -321,7 +332,12 @@ App.timeSpanController = Ember.Object.create({
       return selected;
     } else {
       var timeSpans = this.get('timeSpans');
-      return timeSpans[0];
+
+      if (timeSpans && timeSpans.length > 0) {
+        return timeSpans[0];
+      } else {
+        return App.timeSpanModel.create();
+      }
     }
   }.property('selectedTimeSpan', 'timeSpans.@each'),
 
@@ -630,8 +646,8 @@ App.expenseTableItem = Ember.View.extend({
     }
 
     var timeSpan = App.timeSpanController.get('selectedOrDefault');
-    return timeSpan && timeSpan.get('isCurrentTimeSpan');
-  }.property('addedByUser', 'App.timeSpanController.selectedOrDefault.isCurrentTimeSpan'),
+    return timeSpan && timeSpan.get('isMostRecentTimeSpan');
+  }.property('addedByUser', 'App.timeSpanController.selectedOrDefault.isMostRecentTimeSpan'),
 
   remove: function () {
     var thisObject = $("#" + this.get('elementId'));

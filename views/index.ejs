@@ -47,7 +47,7 @@
                 </tbody>
             {{/view}}
 
-            {{#if App.timeSpanController.selectedOrDefault.isCurrentTimeSpan}}
+            {{#if App.timeSpanController.selectedOrDefault.isMostRecentTimeSpan}}
                 <div id="expenseFormWrapper" class="bottomMargin">
                     <div class="centerText bottomDivider">
                         <h3>New Expense</h3>
@@ -140,20 +140,15 @@
 <div id="timeSpanModal" class="modal hide">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">×</button>
-        <h3>Choose a payout period</h3>
+        <h3>View Expenses</h3>
     </div>
 
     <div class="modal-body">
         <script type="text/x-handlebars">
         {{#each App.timeSpanController.timeSpans }}
-            {{#view App.miniTimeSpanView contentBinding="this" tagName="div" class="miniTimeSpan" }}
-                <div class="centerText miniTimeSpanHeader">
-                    {{content.fullQualifier}}<br/>
-                </div>
-
-                <div style="margin-top:20px;margin-left:2px;">
-                    <span style="font-size:150%;">Total Paid:</span><br/>
-                    <span style="font-size:200%;">${{content.totalPaidString}}</span>
+            {{#view App.miniTimeSpanView contentBinding="this" tagName="div" class="miniTimeSpan centered" }}
+                <div class="miniTimeSpanText">
+                    {{content.fullQualifier}}
                 </div>
             {{/view}}
         {{/each}}

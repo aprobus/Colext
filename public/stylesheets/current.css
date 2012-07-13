@@ -42,21 +42,30 @@ div.centered {
 }
 
 .miniTimeSpan {
-    height: 100px;
+    height: 50px;
+    width: 75%;
     border-radius: 5px;
-    opacity: .4;
     background-color: #999;
     margin-bottom: 5px;
+    position: relative;
+    color: white;
 }
 
 .miniTimeSpan:hover {
-    opacity: 1.0;
     cursor: pointer;
+    background-color: #2C2C2C;
+    width: 90%;
+    -webkit-transition: width 100ms ease-in 200ms;
+    -moz-transition: width 100ms ease-in 200ms;
+    -o-transition: width 100ms ease-in 200ms;
+    transition: width 100ms ease-in 200ms;
 }
 
-.miniTimeSpanHeader {
-    color:#999;
-    background-color:#2C2C2C;
-    border-top-left-radius:5px;
-    border-top-right-radius:5px;
+.miniTimeSpanText {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    left: 0px;
+    top: 15px;
+    font-size: 20px;
 }
