@@ -49,6 +49,11 @@ div.centered {
     margin-bottom: 5px;
     position: relative;
     color: white;
+
+    -webkit-transition: width 100ms ease-in 200ms;
+    -moz-transition: width 100ms ease-in 200ms;
+    -o-transition: width 100ms ease-in 200ms;
+    transition: width 100ms ease-in 200ms;
 }
 
 .miniTimeSpan:hover {
