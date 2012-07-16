@@ -12,51 +12,7 @@ App.personModel = Ember.Object.extend({
 
   fullName: function () {
     return this.get('firstName') + ' ' + this.get('lastName');
-  }.property('firstName', 'lastName'),
-
-  expensesForPayout: function () {
-    var expenses = App.timeSpanController.get('selectedOrDefault').get('expenses');
-    var email = this.get('email');
-
-    var userExpenses = expenses.filter(function (expense) {
-      return expense.get('payer').get('email') === email;
-    });
-
-    return userExpenses;
-  }.property('App.timeSpanController.selectedOrDefault.expenses.@each'),
-
-  paidForPayout: function () {
-    var totalExpenses = 0.0;
-    var expenses = this.get('expensesForPayout');
-    for (var i = 0; i < expenses.length; i++) {
-      totalExpenses += expenses[i].get('amount');
-    }
-
-    return totalExpenses;
-  }.property('expensesForPayout.@each.amount'),
-
-  paidForPayoutString: function () {
-    return this.get('paidForPayout').toFixed(2);
-  }.property('paidForPayout'),
-
-  oweForPayout: function () {
-    var totalPaid = App.timeSpanController.get('selectedOrDefault').get('totalPaid');
-    var numPeople = App.peopleController.get('numPeople');
-    var individualShare = totalPaid / numPeople;
-
-    var userPaid = this.get('paidForPayout');
-
-    return userPaid - individualShare;
-  }.property('App.timeSpanController.selectedOrDefault.totalPaid', 'App.peopleController.numPeople', 'paidForPayout'),
-
-  absOweForPayoutString: function () {
-    var owedString = Math.abs(this.get('oweForPayout')).toFixed(2);
-    return owedString;
-  }.property('oweForPayout'),
-
-  inDebtForPayout: function () {
-    return this.get('oweForPayout') < 0;
-  }.property('oweForPayout')
+  }.property('firstName', 'lastName')
 });
 
 App.expenseModel = Ember.Object.extend({
@@ -207,6 +163,55 @@ App.timeSpanModel = Ember.Object.extend({
       return '$' + (total / numExpenses).toFixed(2);
     }
   }.property('totalPaid', 'expenses.@each')
+});
+
+App.userExpensesModel = Ember.Object.extend({
+  payer: null,
+  timeSpan: null,
+
+  expenses: function () {
+    var expenses = this.get('timeSpan').get('expenses');
+    var email = this.get('payer').get('email');
+
+    var userExpenses = expenses.filter(function (expense) {
+      return expense.get('payer').get('email') === email;
+    });
+
+    return userExpenses;
+  }.property('payer', 'timeSpan'),
+
+  paidForPayout: function () {
+    var totalExpenses = 0.0;
+    var expenses = this.get('expenses');
+    for (var i = 0; i < expenses.length; i++) {
+      totalExpenses += expenses[i].get('amount');
+    }
+
+    return totalExpenses;
+  }.property('expenses.@each.amount'),
+
+  paidForPayoutString: function () {
+    return this.get('paidForPayout').toFixed(2);
+  }.property('paidForPayout'),
+
+  oweForPayout: function () {
+    var totalPaid = App.timeSpanController.get('selectedOrDefault').get('totalPaid');
+    var numPeople = App.peopleController.get('numPeople');
+    var individualShare = totalPaid / numPeople;
+
+    var userPaid = this.get('paidForPayout');
+
+    return userPaid - individualShare;
+  }.property('timeSpan.totalPaid', 'App.peopleController.numPeople', 'paidForPayout'),
+
+  absOweForPayoutString: function () {
+    var owedString = Math.abs(this.get('oweForPayout')).toFixed(2);
+    return owedString;
+  }.property('oweForPayout'),
+
+  inDebtForPayout: function () {
+    return this.get('oweForPayout') < 0;
+  }.property('oweForPayout')
 });
 
 //------------------------------- Controllers -------------------------------
@@ -384,6 +389,26 @@ App.timeSpanController = Ember.Object.create({
   }.observes('timeSpans.@each'),
 
   onSelectedTimeSpanChanged: drawGraph.observes('selectedOrDefault.expenses.@each.amount')
+});
+
+App.userExpensesController = Ember.Object.create({
+  userExpenses: function () {
+    var people = App.peopleController.get('content');
+    var currentTimeSpan = App.timeSpanController.get('selectedOrDefault');
+
+    var userExpenses = [];
+
+    for (var i = 0; i < people.length; i++) {
+      userExpenses.push(App.userExpensesModel.create({
+        payer: people[i],
+        timeSpan: currentTimeSpan
+      }));
+    }
+
+    return Ember.ArrayProxy.create({
+      content: userExpenses
+    });
+  }.property('App.peopleController.content.@each', 'App.timeSpanController.selectedOrDefault')
 });
 
 /*
@@ -602,7 +627,7 @@ App.loginFormController = Ember.Object.create({
  View of the total amounts that people have paid/owe
  */
 App.summaryTableView = Ember.View.extend({
-  peopleBinding: 'App.peopleController.content'
+ userExpensesBinding: 'App.userExpensesController.userExpenses'
 });
 
 /*
@@ -948,21 +973,21 @@ function setData (userData) {
     App.peopleController.setPeople([]);
   }
 
-  if (userData.payouts) {
-    App.payoutController.set('payouts', userData.payouts);
-  } else {
-    App.payoutController.set('payouts', []);
-  }
-
   if (userData.expenses) {
     App.expensesController.setExpenses(userData.expenses);
   } else {
     App.expensesController.setExpenses([]);
   }
+
+  if (userData.payouts) {
+    App.payoutController.set('payouts', userData.payouts);
+  } else {
+    App.payoutController.set('payouts', []);
+  }
 }
 
 function drawGraph () {
-  var people = App.peopleController.get('content');
+  var userExpenses = App.userExpensesController.get('userExpenses').get('content');
   var container = document.getElementById("expenseGraphContainer");
 
   var colors = [];
@@ -970,8 +995,8 @@ function drawGraph () {
   var min = 0;
   var max = 0;
 
-  var expensesPerPerson = people.map(function (person, index) {
-    var owe = person.get('oweForPayout');
+  var expensesPerPerson = userExpenses.map(function (userExpenses, index) {
+    var owe = userExpenses.get('oweForPayout');
 
     if (owe >= 0) {
       colors.push('#20BA0B');
@@ -997,7 +1022,7 @@ function drawGraph () {
     xaxis: {
       tickFormatter: formatXAxis,
       min: -.5,
-      max: people.length -.5
+      max: userExpenses.length -.5
     },
 
     yaxis: {
@@ -1023,8 +1048,8 @@ function drawGraph () {
     var index = parseFloat(x);
 
     if (index % 1 === 0) {
-      var person = people[index];
-      return Boolean(person) ? person.get('fullName') : '';
+      var person = userExpenses[index];
+      return Boolean(person) ? person.get('payer').get('fullName') : '';
     } else {
       return '';
     }

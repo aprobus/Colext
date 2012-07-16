@@ -25,9 +25,9 @@
                 </thead>
 
                 <tbody>
-                    {{#each people}}
+                    {{#each userExpenses.content}}
                         <tr>
-                            <td>{{fullName}}</td>
+                            <td>{{payer.fullName}}</td>
                             <td>${{paidForPayoutString}}</td>
                             <td>
                                 {{#if inDebtForPayout}}
