@@ -45,7 +45,6 @@ div.centered {
     height: 50px;
     width: 75%;
     border-radius: 5px;
-    background-color: #999;
     margin-bottom: 5px;
     position: relative;
     color: white;
@@ -58,12 +57,27 @@ div.centered {
 
 .miniTimeSpan:hover {
     cursor: pointer;
-    background-color: #2C2C2C;
     width: 90%;
     -webkit-transition: width 100ms ease-in 200ms;
     -moz-transition: width 100ms ease-in 200ms;
     -o-transition: width 100ms ease-in 200ms;
     transition: width 100ms ease-in 200ms;
+}
+
+.miniTimeSpanNotSelected {
+    background-color: #999
+}
+
+.miniTimeSpanNotSelected:hover {
+    background-color: #2C2C2C;
+}
+
+.miniTimeSpanSelected {
+    background-color: #EC8F15
+}
+
+.miniTimeSpanSelected:hover {
+    background-color: #E1E80E;
 }
 
 .miniTimeSpanText {

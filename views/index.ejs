@@ -1,7 +1,7 @@
 <div class="row bottomMargin">
     <div class="span4 offset4 centerText">
         <script type="text/x-handlebars">
-            <span><b>Expenses:</b></span> <a class="btn btn-info" data-toggle="modal" href="#timeSpanModal"><i class="icon-time"></i> {{App.timeSpanController.selectedOrDefault.fullQualifier}}</a>
+            <span><b>Expenses:</b></span> {{#view App.openTimeSpanView tagName="button" class="btn btn-info"}}<i class="icon-time"></i> {{displayText}}{{/view}}
         </script>
     </div>
 </div>
