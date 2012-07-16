@@ -325,29 +325,10 @@ App.payoutController = Ember.Object.create({
         App.timeSpanController.setSelectedToNewest();
       }
     }, 'json');
-  }
-});
-
-App.timeSpanController = Ember.Object.create({
-  selectedTimeSpan: null,
-
-  selectedOrDefault: function () {
-    var selected = this.get('selectedTimeSpan');
-    if (selected) {
-      return selected;
-    } else {
-      var timeSpans = this.get('timeSpans');
-
-      if (timeSpans && timeSpans.length > 0) {
-        return timeSpans[0];
-      } else {
-        return App.timeSpanModel.create();
-      }
-    }
-  }.property('selectedTimeSpan', 'timeSpans.@each'),
+  },
 
   timeSpans: function () {
-    var payouts = App.payoutController.get('payouts').sort();
+    var payouts = this.get('payouts').sort();
 
     if (payouts.length === 0) {
       var timeSpanAllTime = App.timeSpanModel.create({
@@ -376,8 +357,29 @@ App.timeSpanController = Ember.Object.create({
       to: Number.POSITIVE_INFINITY
     }));
 
-    return payoutTimeSpans.reverse();
-  }.property('App.payoutController.payouts.@each'),
+    App.timeSpanController.set('timeSpans', payoutTimeSpans.reverse());
+  }.observes('payouts.@each')
+});
+
+App.timeSpanController = Ember.Object.create({
+  timeSpans: [],
+
+  selectedTimeSpan: null,
+
+  selectedOrDefault: function () {
+    var selected = this.get('selectedTimeSpan');
+    if (selected) {
+      return selected;
+    } else {
+      var timeSpans = this.get('timeSpans');
+
+      if (timeSpans && timeSpans.length > 0) {
+        return timeSpans[0];
+      } else {
+        return App.timeSpanModel.create();
+      }
+    }
+  }.property('selectedTimeSpan', 'timeSpans.@each'),
 
   setSelectedToNewest: function () {
     var timeSpans = this.get('timeSpans');
