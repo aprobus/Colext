@@ -894,7 +894,6 @@ App.miniTimeSpanView = Ember.View.extend({
 
 App.openTimeSpanView = Ember.View.extend({
   classNameBindings: ['disabled'],
-  //attributeBindings: ['dataToggle:data-toggle', 'href', 'disabled'],
   attributeBindings: ['disabled'],
   displayTextBinding: 'App.timeSpanController.selectedOrDefault.fullQualifier',
 
