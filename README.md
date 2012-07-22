@@ -47,7 +47,17 @@ The Colext server runs on nodejs, and uses MySQL for storing data.
 2. Install MySQL (www.mysql.com)
 
 After pulling down the code, you must edit config.json and set the
-appropriate values for your MySQL server. Next, add a "ret" database
+appropriate values for your MySQL server. The json file should contain
+a line like this:
+
+```json
+"database": {
+    "port": 3306, //Port your database is listening on
+    "host": "127.0.0.1" //IP address or hostname of database server
+}
+```
+
+Next, add a "ret" database
 to your MySQL server. After that, run
 ```bash
 node bin/dbSetup -u [MySQL username] -p [MySQL password]
