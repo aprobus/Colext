@@ -116,3 +116,25 @@ file. For instance, to listen on port 3000:
     "port": 3000
 }
 ```
+
+## Credits
+
+Colext relies on several projects, including, but not limited to:
+
+### Node (www.nodejs.org)
+
+All of the backend code was written in node. I chose it because that's what I'm
+using at work, and you can never get enough practice.
+
+### Emberjs (www.emberjs.com)
+
+Used for all of the client side MVC. It is amazing for keeping data/views
+synced up.
+
+### Bootstrap (http://twitter.github.com/bootstrap/)
+
+Makes the UI look a lot nicer than it would have if I had to do all the UI work.
+
+### Glyphicons (http://glyphicons.com/)
+
+All of the icons are from Glyphicons, through Bootstrap.
