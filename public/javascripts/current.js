@@ -179,7 +179,7 @@ App.userExpensesModel = Ember.Object.extend({
     });
 
     return userExpenses;
-  }.property('payer', 'timeSpan'),
+  }.property('payer', 'timeSpan.expenses.@each.amount'),
 
   paidForPayout: function () {
     var totalExpenses = 0.0;
