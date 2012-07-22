@@ -43,8 +43,12 @@ The Colext server runs on nodejs, and uses MySQL for storing data.
 
 ## Installation
 
+### Install dependencies
+
 1. Install nodejs (www.nodejs.org)
 2. Install MySQL (www.mysql.com)
+
+### Edit config.json
 
 After pulling down the code, you must edit config.json and set the
 appropriate values for your MySQL server. The json file should contain
@@ -57,12 +61,16 @@ a line like this:
 }
 ```
 
+### Install required node modules
+
 Also, make sure to run
 ```bash
 npm install
 ```
 in the root project directory. This will install all of the required node
 modules.
+
+### Create tables in MySQL
 
 Next, add a "ret" database to your MySQL server. This can be done by logging
 into MySQL, and then running the command:
@@ -75,8 +83,22 @@ After that, run
 node bin/dbSetup -u [MySQL username] -p [MySQL password]
 ```
 
-This will setup the required tables in your database. Now, you are ready
-to go!
+### Add users/groups
+
+At the moment, users and groups must be manually added to the users/groups tables
+respectively.
+
+First, add a group with the command
+```sql
+INSERT INTO GROUPS (name) VALUES ([Your group name]);
+```
+
+Next, run the following command for each user in the group:
+```sql
+INSERT INTO USERS (firstName, lastName, email, password, groupId) VALUES ([User's first name], [User's last name], [User's email], [User's password], [Id of the group just created]);
+```
+
+You should now be ready to go!
 
 ## Running Colext
 
@@ -85,4 +107,12 @@ command:
 
 ```bash
 node bin/app.js -u [MySQL username] -p [MySQL password]
+```
+
+The server will be listening on whatever port is specified in the config.json
+file. For instance, to listen on port 3000:
+```json
+"server": {
+    "port": 3000
+}
 ```
