@@ -57,8 +57,20 @@ a line like this:
 }
 ```
 
-Next, add a "ret" database
-to your MySQL server. After that, run
+Also, make sure to run
+```bash
+npm install
+```
+in the root project directory. This will install all of the required node
+modules.
+
+Next, add a "ret" database to your MySQL server. This can be done by logging
+into MySQL, and then running the command:
+```sql
+CREATE DATABASE ret;
+```
+
+After that, run
 ```bash
 node bin/dbSetup -u [MySQL username] -p [MySQL password]
 ```
