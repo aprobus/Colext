@@ -43,13 +43,24 @@ The Colext server runs on nodejs, and uses MySQL for storing data.
 
 ## Installation
 
-More to come
+1. Install nodejs (www.nodejs.org)
+2. Install MySQL (www.mysql.com)
+
+After pulling down the code, you must edit config.json and set the
+appropriate values for your MySQL server. Next, add a "ret" database
+to your MySQL server. After that, run
+'''bash
+node bin/dbSetup -u [MySQL username] -p [MySQL password]
+'''
+
+This will setup the required tables in your database. Now, you are ready
+to go!
 
 ## Running Colext
 
 Once you have nodejs and MySql setup, you can start Colext with the following
 command:
 
-~~~~
+'''bash
 node bin/app.js -u [MySQL username] -p [MySQL password]
-~~~~
+'''
