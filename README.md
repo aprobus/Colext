@@ -9,8 +9,8 @@ electricity, cable, etc) evenly. When deciding if you want to use
 Colext, keep these things in mind:
 
 
-1. Expenses are split evenly across the whole group, there is no
-partial expense splitting
+1. Expenses are split evenly across the whole group; there is no
+partial expense-splitting
 2. You can only belong to one group
 
 So, if you are looking to keep track of individual expenses, Colext
@@ -19,8 +19,8 @@ with the same group of people over and over, Colext can help.
 
 ## What it does
 
-Colext keeps track of how much everyone has spent on shared expenses
-compared to the rest of the members of the group, and uses that to
+Colext keeps track of how much individual group members have spent
+on shared expenses compared to other group members, and uses that to
 determine who owes/is owed money. To do so, Colect uses the simple
 formula: [sum of expenses] / [number of people]. If a user has paid
 more than that amount, they are owed money. If they have paid less,
@@ -30,12 +30,12 @@ they owe money. It's that simple.
 
 Colext has several features that allow groups to easily keep track of
 their money. First, a list of all the expenses, including the amount,
-date, and a comment for each expense. Secondly, an easy to read table
+date, and a comment for each expense. Secondly, an easy-to-read table
 specifying how much everyone has chipped into the money pool, and how
 much they owe/are owed. Third, a graph display of how much each user
 is owed/owes for quick reference. Lastly, the ability to reset the
 expenses so everyone will be even. Past expenses will still be visible
-by viewing the history, but won't count to the current pool of expenses.
+by viewing the history, but won't count toward the current pool of expenses.
 
 ## Dependencies
 
@@ -75,7 +75,7 @@ modules.
 Next, add a "ret" database to your MySQL server. This can be done by logging
 into MySQL, and then running the command:
 ```sql
-CREATE DATABASE ret;
+CREATE DATABASE "ret";
 ```
 
 After that, run
