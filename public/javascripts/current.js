@@ -566,6 +566,8 @@ App.currentUserController = Ember.Object.create({
   }.property('user'),
 
   onLoggedInChanged: function () {
+    $('.itemWithPopover').popover('hide');
+    
     var loggedIn = this.get('loggedIn');
 
     if (!loggedIn) {

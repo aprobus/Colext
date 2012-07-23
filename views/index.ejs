@@ -102,7 +102,7 @@
 
                 <tbody>
                     {{#each content}}
-                        {{#view App.expenseTableItem contentBinding="this" tagName="tr"}}
+                        {{#view App.expenseTableItem contentBinding="this" class="itemWithPopover" tagName="tr"}}
                             <td>{{content.timeStampString}}</td>
                             <td>{{content.payerString}}</td>
                             <td>{{content.amountString}}</td>
