@@ -1,7 +1,7 @@
 <div class="row bottomMargin">
     <div class="span4 offset4 centerText">
         <script type="text/x-handlebars">
-            <span><b>Expenses:</b></span> {{#view App.openTimeSpanView tagName="button" class="btn btn-info"}}<i class="icon-time"></i> {{displayText}}{{/view}}
+            <span><b>Expenses:</b></span> {{#view App.openTimeSpanView tagName="button" class="btn btn-info"}}<i class="icon-time"></i> {{displayText}}{{/view}} (<a href="#" rel="tooltip" title="Only expenses in this date range are shown.">?</a>)
         </script>
     </div>
 </div>
@@ -9,6 +9,7 @@
 <div class="row">
 
     <div class="span4 centerText">
+        <h5>Payout Per User (<a href="#" rel="tooltip" title="Shows the difference between how much each user has paid, and their share of expenses. Users in green have paid more than their share, while users in red have paid less than their share.">?</a>)</h5>
         <div id="expenseGraphContainer">
         </div>
     </div>
@@ -19,8 +20,8 @@
                 <thead>
                     <tr>
                         <td></td>
-                        <td>Paid</td>
-                        <td>Payout</td>
+                        <td>Paid (<a href="#" rel="tooltip" title="The total amount this user has contributed">?</a>)</td>
+                        <td>Payout (<a href="#" rel="tooltip" title="How much more/less this user has paid than is expected. Green: Owed money. Red: Owes money">?</a>)</td>
                     </tr>
                 </thead>
 
@@ -44,7 +45,7 @@
             {{#if App.timeSpanController.selectedOrDefault.isMostRecentTimeSpan}}
                 <div id="expenseFormWrapper" class="bottomMargin">
                     <div class="centerText bottomDivider">
-                        <h3>New Expense</h3>
+                        <h3>New Expense (<a href="#" rel="tooltip" title="Adds a new expense to the list, with the currently logged in user as the payer.">?</a>)</h3>
                     </div>
 
                         {{#view App.expenseFormView class="form-vertical" tagName="form"}}
@@ -74,7 +75,7 @@
                 </div>
 
                 <div class="centerText">
-                    {{#view App.payoutView tagName="button" class="btn btn-large btn-danger"}}Payout{{/view}}
+                    {{#view App.payoutView tagName="button" class="btn btn-large btn-danger"}}Payout{{/view}} (<a href="#" rel="tooltip" title="Starts a new pay period, and all currently listed expenses are moved into history.">?</a>)
                 </div>
             {{else}}
                 <div class="alert alert-warning centerText">
@@ -134,7 +135,7 @@
 <div id="timeSpanModal" class="modal hide">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">×</button>
-        <h3>View Expenses</h3>
+        <h3>View Expenses (<a href="#" rel="tooltip" title="Select which date range to view. The range currently being viewed is highlighted.">?</a>)</h3>
     </div>
 
     <div class="modal-body">

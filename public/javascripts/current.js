@@ -1072,9 +1072,7 @@ function drawGraph () {
     yaxis: {
       min: min * 1.1,
       max: max * 1.1
-    },
-
-    title: 'Payout Per User'
+    }
   };
 
   var horiLine = {
