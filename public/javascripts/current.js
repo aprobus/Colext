@@ -815,7 +815,11 @@ App.payoutView = Ember.View.extend({
 
   click: function (event) {
     event.preventDefault();
-    App.payoutController.addPayout();
+
+    var confirmedPayout = confirm('Are you sure you want to start a new pay period, and move all current expenses to history?');
+    if (confirmedPayout) {
+      App.payoutController.addPayout();
+    }
   }
 });
 
