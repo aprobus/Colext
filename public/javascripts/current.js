@@ -567,7 +567,7 @@ App.currentUserController = Ember.Object.create({
 
   onLoggedInChanged: function () {
     $('.itemWithPopover').popover('hide');
-    
+
     var loggedIn = this.get('loggedIn');
 
     if (!loggedIn) {
@@ -1072,7 +1072,9 @@ function drawGraph () {
     yaxis: {
       min: min * 1.1,
       max: max * 1.1
-    }
+    },
+
+    title: 'Payout Per User'
   };
 
   var horiLine = {
